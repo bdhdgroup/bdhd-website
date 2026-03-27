@@ -226,6 +226,25 @@
             flex-shrink: 0;
         }
 
+        /* ── Card mark ── */
+
+        .card {
+            display: flex;
+            align-items: flex-start;
+            gap: 28px;
+        }
+
+        .card__mark {
+            width: 56px;
+            height: 56px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .card__content {
+            flex: 1;
+        }
+
         /* ── Footer ── */
 
         .footer {
@@ -238,6 +257,17 @@
             font-size: 14px;
             color: var(--text-muted);
             letter-spacing: 0.04em;
+        }
+
+        .footer__mark {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            opacity: 0.55;
+            position: relative;
+            top: -1px;
         }
 
         /* ── Responsive ── */
@@ -324,16 +354,25 @@
             <h2 class="section__heading">How we work</h2>
             <div class="cards">
                 <div class="card">
-                    <h3 class="card__heading">Strategic Advisory</h3>
-                    <p class="card__text">Board-level counsel for companies scaling through acquisition, entering regulated markets, or positioning for exit. We bring institutional relationships and a strategic lens shaped by 15 years navigating government, policy, and commercial development at the most senior levels.</p>
+                    <img src="bdhd_four_squares.png" class="card__mark" alt="">
+                    <div class="card__content">
+                        <h3 class="card__heading">Strategic Advisory</h3>
+                        <p class="card__text">Board-level counsel for companies scaling through acquisition, entering regulated markets, or positioning for exit. We bring institutional relationships and a strategic lens shaped by 15 years navigating government, policy, and commercial development at the most senior levels.</p>
+                    </div>
                 </div>
                 <div class="card">
-                    <h3 class="card__heading">Investment</h3>
-                    <p class="card__text">Working capital deployment and co-investment across healthcare, education, and real estate. We focus where governance credibility and market access create compounding value — particularly in sectors backed by clear government demand signals.</p>
+                    <img src="bdhd_four_squares.png" class="card__mark" alt="">
+                    <div class="card__content">
+                        <h3 class="card__heading">Investment</h3>
+                        <p class="card__text">Working capital deployment and co-investment across healthcare, education, and real estate. We focus where governance credibility and market access create compounding value - particularly in sectors backed by clear government demand signals.</p>
+                    </div>
                 </div>
                 <div class="card">
-                    <h3 class="card__heading">Governance Design</h3>
-                    <p class="card__text">Designing and implementing board structures, governance frameworks, and institutional-grade operating models. This is not compliance box-ticking. It is the architecture that gives investors confidence and drives exit multiples.</p>
+                    <img src="bdhd_four_squares.png" class="card__mark" alt="">
+                    <div class="card__content">
+                        <h3 class="card__heading">Governance Design</h3>
+                        <p class="card__text">Designing and implementing board structures, governance frameworks, and institutional-grade operating models. This is not compliance box-ticking. It is the architecture that gives investors confidence and drives exit multiples.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -369,7 +408,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p class="footer__text">BDHD Group. Dubai, UAE. &copy; 2026</p>
+        <p class="footer__text"><img src="bdhd_four_squares.png" class="footer__mark" alt="">BDHD Group. Dubai, UAE. &copy; 2026</p>
     </footer>
 
 </body>
