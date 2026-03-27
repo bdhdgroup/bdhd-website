@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDHD Group | Advisory | Investment | Governance</title>
+    <meta name="description" content="BDHD Group is a strategic advisory and investment practice based in the Middle East, operating at the intersection of governance expertise, institutional capital, and market access.">
+    <link rel="icon" type="image/png" href="bdhd_four_squares.png">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #5271FF;
+            --secondary: #768DFF;
+            --accent: #99AAFF;
+            --light: #BAC6FF;
+            --tint-bg: #F5F7FF;
+            --text: #1A1A2E;
+            --text-light: #4A4A5A;
+            --text-muted: #6B6B7B;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+            color: var(--text);
+            line-height: 1.7;
+            font-weight: 400;
+            font-size: 17px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* ── Layout ── */
+
+        .section {
+            padding: 100px 24px;
+        }
+
+        .section--tinted {
+            background-color: var(--tint-bg);
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .container--wide {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        /* ── Hero ── */
+
+        .hero {
+            padding: 120px 24px 100px;
+            text-align: center;
+        }
+
+        .hero__logo {
+            display: block;
+            max-width: 780px;
+            width: 90%;
+            margin: 0 auto 56px;
+        }
+
+        .hero__tagline {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .hero__descriptor {
+            font-size: 18px;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+
+        /* ── Section headings ── */
+
+        .section__heading {
+            font-size: 32px;
+            margin-bottom: 40px;
+            color: var(--text);
+        }
+
+        .section__heading::after {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 2px;
+            background-color: var(--accent);
+            margin-top: 20px;
+        }
+
+        /* ── Body copy ── */
+
+        .prose p {
+            margin-bottom: 24px;
+            color: var(--text-light);
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .prose p:last-child {
+            margin-bottom: 0;
+        }
+
+        .prose--small {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--light);
+        }
+
+        .prose--small p {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* ── Cards ── */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .card {
+            padding: 40px 32px;
+            border: 1px solid #E8ECFF;
+            border-radius: 2px;
+            transition: border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+        }
+
+        .card__heading {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .card__text {
+            font-size: 16px;
+            color: var(--text-light);
+            line-height: 1.75;
+        }
+
+        /* ── Contact ── */
+
+        .contact__intro {
+            color: var(--text-light);
+            margin-bottom: 48px;
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .contact__details {
+            list-style: none;
+            font-size: 17px;
+        }
+
+        .contact__details li {
+            margin-bottom: 14px;
+            color: var(--text-light);
+        }
+
+        .contact__details li:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact__label {
+            font-weight: 600;
+            color: var(--text);
+            display: inline-block;
+            min-width: 90px;
+        }
+
+        .contact__details a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .contact__details a:hover {
+            border-bottom-color: var(--primary);
+        }
+
+        .linkedin-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .linkedin-link svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary);
+            flex-shrink: 0;
+        }
+
+        /* ── Footer ── */
+
+        .footer {
+            padding: 48px 24px;
+            border-top: 1px solid #E8ECFF;
+            text-align: center;
+        }
+
+        .footer__text {
+            font-size: 14px;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Responsive ── */
+
+        @media (max-width: 800px) {
+            .cards {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .hero {
+                padding: 80px 24px 72px;
+            }
+
+            .hero__logo {
+                max-width: 540px;
+            }
+
+            .section {
+                padding: 72px 24px;
+            }
+
+            .section__heading {
+                font-size: 28px;
+            }
+
+            .card {
+                padding: 32px 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero__logo {
+                max-width: 400px;
+            }
+
+            .hero__descriptor {
+                font-size: 16px;
+            }
+
+            .hero__tagline {
+                font-size: 13px;
+                letter-spacing: 0.18em;
+            }
+
+            .section__heading {
+                font-size: 26px;
+            }
+
+            body {
+                font-size: 16px;
+            }
+
+            .contact__label {
+                display: block;
+                min-width: auto;
+                margin-bottom: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero -->
+    <section class="hero">
+        <img src="BHDH%20Group%20Logo.png" alt="BDHD Group — Advisory | Investment | Governance" class="hero__logo">
+        <p class="hero__descriptor">Strategic advisory practice operating at the intersection of governance expertise, institutional capital, and market access.</p>
+    </section>
+
+    <!-- About -->
+    <section class="section section--tinted">
+        <div class="container">
+            <h2 class="section__heading">What we do</h2>
+            <div class="prose">
+                <p>BDHD Group is a strategic advisory and investment practice based in the Middle East. We work with growth-stage businesses and institutional ventures across healthcare, education, and real estate - providing the governance architecture, strategic counsel, and market access that accelerate scale and de-risk investment.</p>
+                <p>Our work sits at the intersection of government, regulation, and commercial development. We bring a track record of leading large-scale organisations, shaping government policy, and navigating regulatory frameworks across the UK, Europe, and the Middle East. Our approach is hands-on and relationship-driven. Advisory without accountability is commentary. We take a different view.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Focus Areas -->
+    <section class="section">
+        <div class="container--wide">
+            <h2 class="section__heading">How we work</h2>
+            <div class="cards">
+                <div class="card">
+                    <h3 class="card__heading">Strategic Advisory</h3>
+                    <p class="card__text">Board-level counsel for companies scaling through acquisition, entering regulated markets, or positioning for exit. We bring institutional relationships and a strategic lens shaped by 15 years navigating government, policy, and commercial development at the most senior levels.</p>
+                </div>
+                <div class="card">
+                    <h3 class="card__heading">Investment</h3>
+                    <p class="card__text">Working capital deployment and co-investment across healthcare, education, and real estate. We focus where governance credibility and market access create compounding value — particularly in sectors backed by clear government demand signals.</p>
+                </div>
+                <div class="card">
+                    <h3 class="card__heading">Governance Design</h3>
+                    <p class="card__text">Designing and implementing board structures, governance frameworks, and institutional-grade operating models. This is not compliance box-ticking. It is the architecture that gives investors confidence and drives exit multiples.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Credentials -->
+    <section class="section section--tinted">
+        <div class="container">
+            <h2 class="section__heading">Background</h2>
+            <div class="prose">
+                <p>BDHD Group is led by Phil Broadhead, who brings 15 years of senior leadership spanning UK government, public institutions, and commercial enterprise. As the UK's national leader for local and regional government, he worked hand in hand with British Prime Ministers, attended Cabinet, and represented the sector across Whitehall and Westminster on national policy. As Leader of a major British city, he held direct responsibility for a combined budget approaching £1 billion and a workforce of over 5,000.</p>
+                <p>Beyond government, he founded and chaired one of the UK's largest urban regeneration companies, served on the Conservative Party Board, and has worked directly with Cabinet ministers on national reform programmes spanning healthcare, education, and housing. His government relations and policy expertise now extends across Europe and the Middle East, where BDHD Group is actively engaged in institutional development and regulatory strategy.</p>
+            </div>
+            <div class="prose prose--small">
+                <p>Active sectors include healthcare staffing and workforce solutions, higher education and institutional development, and property investment and urban regeneration - with a particular focus on markets where government policy and private capital intersect.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section__heading">Get in touch</h2>
+            <p class="contact__intro">BDHD Group is currently engaged across healthcare sector consolidation in the UK and higher education infrastructure development in the Gulf.</p>
+            <p class="contact__intro">The best starting point is usually a short email outlining the opportunity and the role you see governance or institutional advisory playing.</p>
+            <ul class="contact__details">
+                <li><span class="contact__label">Email</span> <a href="mailto:phil@bdhd.ae">phil@bdhd.ae</a></li>
+                <li><span class="contact__label">Location</span> Dubai, UAE</li>
+                <li><span class="contact__label">LinkedIn</span> <a href="https://linkedin.com/in/pbroadhead" target="_blank" rel="noopener noreferrer" class="linkedin-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>Phil Broadhead</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer__text">BDHD Group. Dubai, UAE. &copy; 2026</p>
+    </footer>
+
+</body>
+</html>
