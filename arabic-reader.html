@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arabic Reader — Learn Through Stories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand:#F5EDD8; --deep:#1A1208; --ink:#2C1A0E; --rust:#C4541A;
+    --gold:#D4A017; --teal:#1A6B6B; --cream:#FAF5E9; --muted:#8B7355;
+    --paper:#EDE4CC; --known-bg:#E8F4E8; --known-border:#4CAF50;
+    --ar-size:2.2rem;
+    --root-col:#7B3F00; --prefix-col:#1A6B6B; --suffix-col:#8B2FC9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--deep);color:var(--ink);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 80% 10%,#2A1F0A 0%,transparent 60%),radial-gradient(ellipse 40% 60% at 10% 80%,#0D2626 0%,transparent 50%),var(--deep);z-index:0;pointer-events:none;}
+  .geo{position:fixed;top:0;right:0;width:300px;height:300px;opacity:0.04;pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:24px 20px 80px;}
+
+  /* Header */
+  .header{text-align:center;margin-bottom:36px;padding:36px 0 28px;border-bottom:1px solid rgba(212,160,23,0.2);}
+  .header-arabic{font-family:'Amiri',serif;font-size:3.5rem;color:var(--gold);line-height:1;margin-bottom:8px;text-shadow:0 0 40px rgba(212,160,23,0.3);}
+  .header-title{font-size:1.05rem;font-weight:300;color:var(--muted);letter-spacing:0.3em;text-transform:uppercase;}
+
+  /* Progress */
+  .progress-section{background:rgba(245,237,216,0.06);border:1px solid rgba(212,160,23,0.15);border-radius:12px;padding:16px 24px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .progress-stat{display:flex;flex-direction:column;align-items:center;min-width:70px;}
+  .stat-num{font-family:'Space Mono',monospace;font-size:1.6rem;color:var(--gold);line-height:1;}
+  .stat-label{font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+  .progress-bar-wrap{flex:1;min-width:150px;}
+  .progress-bar-label{font-size:0.75rem;color:var(--muted);margin-bottom:6px;}
+  .progress-bar{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:3px;transition:width 0.5s ease;}
+
+  /* Toolbar */
+  .toolbar{background:rgba(245,237,216,0.05);border:1px solid rgba(212,160,23,0.12);border-radius:10px;padding:10px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .toolbar-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;}
+  .sz-btn{width:34px;height:34px;border-radius:8px;border:1px solid rgba(212,160,23,0.25);background:transparent;color:var(--sand);cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;}
+  .sz-btn:hover{background:rgba(212,160,23,0.15);border-color:var(--gold);}
+  .sz-btn.active{background:var(--gold);border-color:var(--gold);color:var(--deep);font-weight:700;}
+  .sz-preview{font-family:'Amiri',serif;color:var(--gold);direction:rtl;transition:font-size 0.2s;}
+  .audio-pill{display:none;align-items:center;gap:6px;background:rgba(196,84,26,0.12);border:1px solid rgba(196,84,26,0.3);border-radius:20px;padding:4px 12px;font-size:0.78rem;color:var(--rust);white-space:nowrap;}
+  .audio-pill.on{display:inline-flex;}
+  .audio-dot{width:7px;height:7px;border-radius:50%;background:var(--rust);animation:dotpulse 1s infinite;}
+  @keyframes dotpulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .no-audio{font-size:0.78rem;color:var(--muted);font-style:italic;display:none;}
+
+  /* Level tabs */
+  .level-tabs{display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px;}
+  .level-tab{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1px solid rgba(212,160,23,0.2);background:transparent;color:var(--muted);font-family:'Crimson Pro',serif;font-size:0.9rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+  .level-tab:hover{border-color:var(--gold);color:var(--sand);}
+  .level-tab.active{background:var(--gold);border-color:var(--gold);color:var(--deep);font-weight:600;}
+
+  /* Known words */
+  .known-section{background:rgba(245,237,216,0.05);border:1px solid rgba(212,160,23,0.1);border-radius:12px;padding:18px 22px;margin-bottom:24px;}
+  .known-hdr{font-family:'Space Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--gold);margin-bottom:12px;}
+  .known-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .known-chip{background:rgba(26,107,107,0.2);border:1px solid rgba(26,107,107,0.4);border-radius:20px;padding:4px 12px;font-family:'Amiri',serif;font-size:1.2rem;color:var(--teal);cursor:pointer;direction:rtl;transition:all 0.2s;}
+  .known-chip:hover{background:rgba(26,107,107,0.35);}
+
+  /* Story card */
+  .story-card{background:var(--cream);border-radius:16px;overflow:hidden;margin-bottom:28px;box-shadow:0 8px 40px rgba(0,0,0,0.4);}
+  .story-header{background:var(--paper);padding:18px 26px;border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .story-num{font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--rust);letter-spacing:0.1em;text-transform:uppercase;}
+  .story-title-en{font-size:1.25rem;font-weight:600;color:var(--ink);}
+  .story-title-ar{font-family:'Amiri',serif;font-size:1.5rem;color:var(--teal);margin-left:auto;}
+  .story-body{padding:26px;}
+
+  /* Controls */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+  .btn{padding:8px 16px;border-radius:8px;border:1px solid;font-family:'Crimson Pro',serif;font-size:0.9rem;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}
+  .btn-outline{background:transparent;border-color:rgba(44,26,14,0.22);color:var(--ink);}
+  .btn-outline:hover{background:rgba(44,26,14,0.07);}
+  .btn-outline.active{background:var(--teal);border-color:var(--teal);color:white;}
+  .btn-gold{background:var(--gold);border-color:var(--gold);color:var(--deep);font-weight:600;}
+  .btn-gold:hover{filter:brightness(1.08);}
+  .btn-play{background:var(--rust);border-color:var(--rust);color:white;font-weight:600;}
+  .btn-play:hover{filter:brightness(1.1);}
+  .btn-play.speaking{background:#8B2000;animation:playpulse 1.2s infinite;}
+  @keyframes playpulse{0%,100%{box-shadow:0 0 0 0 rgba(196,84,26,0.4)}50%{box-shadow:0 0 0 8px rgba(196,84,26,0)}}
+
+  /* Sentence nav */
+  .sent-nav{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .sent-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(44,26,14,0.15);background:white;font-size:0.75rem;cursor:pointer;font-family:'Space Mono',monospace;color:var(--muted);transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+  .sent-btn.active{background:var(--rust);border-color:var(--rust);color:white;}
+  .sent-btn:hover:not(.active){border-color:var(--gold);color:var(--ink);}
+
+  /* Arabic text */
+  .arabic-text{font-family:'Amiri',serif;font-size:var(--ar-size);line-height:2.5;color:var(--ink);direction:rtl;text-align:right;margin-bottom:20px;background:white;border-radius:12px;padding:28px 32px;border:1px solid rgba(44,26,14,0.1);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  .ar-sentence{display:block;margin-bottom:0.6em;}
+  .ar-sentence:last-child{margin-bottom:0;}
+  .arabic-word{display:inline;cursor:pointer;border-bottom:2px solid transparent;transition:background 0.15s,border-color 0.15s;padding:2px 3px;border-radius:4px;}
+  .arabic-word:hover{background:rgba(212,160,23,0.22);border-bottom-color:var(--gold);}
+  .arabic-word.known{color:var(--teal);border-bottom-color:rgba(26,107,107,0.3);opacity:0.65;}
+  /* Verbs get a subtle underline hint */
+  .arabic-word.is-verb{border-bottom:2px dashed rgba(196,84,26,0.35);}
+  .arabic-word.is-verb:hover{border-bottom-color:var(--rust);}
+
+  .sent-spk{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(196,84,26,0.28);background:transparent;color:var(--rust);font-size:0.85rem;cursor:pointer;margin-left:8px;transition:all 0.18s;vertical-align:middle;flex-shrink:0;}
+  .sent-spk:hover{background:var(--rust);color:white;border-color:var(--rust);}
+
+  .translit{font-style:italic;font-size:1.05rem;color:var(--muted);text-align:center;margin-bottom:14px;padding:12px 16px;background:rgba(44,26,14,0.04);border-radius:8px;display:none;line-height:1.9;}
+  .translit.on{display:block;}
+  .transl{font-size:1.1rem;color:var(--ink);margin-bottom:20px;padding:12px 16px;background:rgba(196,84,26,0.06);border-left:3px solid var(--rust);border-radius:0 8px 8px 0;display:none;font-style:italic;line-height:1.8;}
+  .transl.on{display:block;}
+
+  /* Vocab */
+  .vocab-section{margin-top:18px;}
+  .vocab-hdr{font-family:'Space Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .vocab-hdr::after{content:'';flex:1;height:1px;background:rgba(44,26,14,0.12);}
+  .vocab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;}
+  .vocab-card{background:white;border:1px solid rgba(44,26,14,0.1);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+  .vocab-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);transition:width 0.2s;}
+  .vocab-card.is-verb::before{background:var(--rust);}
+  .vocab-card:hover{box-shadow:0 4px 16px rgba(44,26,14,0.1);}
+  .vocab-card:hover::before{width:5px;}
+  .vocab-card.known{background:var(--known-bg);border-color:var(--known-border);opacity:0.6;}
+  .vocab-card.known::before{background:var(--known-border);}
+  .vocab-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+  .vocab-ar{font-family:'Amiri',serif;font-size:1.8rem;color:var(--ink);direction:rtl;line-height:1.3;}
+  .vocab-spk{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1px solid rgba(196,84,26,0.3);background:transparent;color:var(--rust);font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;margin-top:2px;}
+  .vocab-spk:hover{background:var(--rust);color:white;border-color:var(--rust);}
+  .vocab-translit{font-size:0.78rem;font-style:italic;color:var(--muted);margin-bottom:3px;}
+  .vocab-en{font-size:0.85rem;color:var(--rust);font-weight:600;}
+  .vocab-tag{font-size:0.68rem;font-family:'Space Mono',monospace;background:rgba(196,84,26,0.1);color:var(--rust);border-radius:4px;padding:1px 5px;margin-top:4px;display:inline-block;}
+  .vocab-mark{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(44,26,14,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;}
+  .vocab-card.known .vocab-mark{background:var(--known-border);border-color:var(--known-border);color:white;}
+
+  /* Tooltip */
+  .tip{position:fixed;background:var(--deep);color:var(--sand);border:1px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:0.9rem;z-index:1000;pointer-events:none;max-width:220px;box-shadow:0 8px 30px rgba(0,0,0,0.5);display:none;}
+  .tip.on{display:block;}
+  .tip-ar{font-family:'Amiri',serif;font-size:1.7rem;direction:rtl;text-align:right;color:var(--gold);}
+  .tip-translit{font-style:italic;color:var(--muted);font-size:0.78rem;margin:2px 0;}
+  .tip-en{color:white;font-weight:600;}
+  .tip-verb{font-size:0.68rem;color:rgba(196,84,26,0.8);margin-top:3px;}
+  .tip-hint{font-size:0.68rem;color:rgba(212,160,23,0.5);margin-top:3px;}
+
+  /* ══ POPUP ══ */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);padding:16px;}
+  .overlay.on{display:flex;}
+  .popup{background:var(--cream);border-radius:18px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:2px solid var(--gold);max-height:90vh;overflow-y:auto;}
+  .pop-ar{font-family:'Amiri',serif;font-size:4rem;color:var(--ink);direction:rtl;line-height:1.2;cursor:pointer;transition:color 0.15s;}
+  .pop-ar:hover{color:var(--rust);}
+  .pop-hint{font-size:0.72rem;color:var(--muted);margin:-2px 0 10px;}
+  .pop-translit{font-style:italic;color:var(--muted);font-size:1.05rem;margin-bottom:4px;}
+  .pop-en{font-size:1.4rem;color:var(--rust);font-weight:600;margin-bottom:14px;}
+  .pop-ctx{font-size:0.85rem;color:var(--muted);margin-bottom:18px;padding:10px;background:rgba(44,26,14,0.05);border-radius:8px;font-style:italic;}
+  .pop-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+
+  /* ── Verb anatomy panel ── */
+  .verb-panel{margin:4px 0 18px;text-align:left;border:1.5px solid rgba(196,84,26,0.25);border-radius:12px;overflow:hidden;background:white;}
+  .verb-panel-hdr{background:var(--rust);color:white;font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;padding:8px 14px;display:flex;align-items:center;gap:8px;}
+  .verb-panel-body{padding:16px 14px;}
+
+  /* The word anatomy display */
+  .anatomy-wrap{direction:rtl;text-align:center;margin-bottom:16px;}
+  .anatomy-word{font-family:'Amiri',serif;font-size:2.6rem;line-height:1;display:inline-flex;gap:0;align-items:flex-end;}
+  .part-prefix{color:var(--prefix-col);position:relative;}
+  .part-root{color:var(--root-col);font-weight:700;position:relative;}
+  .part-suffix{color:var(--suffix-col);position:relative;}
+  .part-plain{color:var(--ink);}
+
+  /* Labels below each part */
+  .anatomy-labels{display:flex;justify-content:center;gap:0;direction:rtl;margin-top:6px;font-size:0.7rem;font-family:'Space Mono',monospace;}
+  .lbl{text-align:center;white-space:nowrap;padding:0 3px;}
+  .lbl-prefix{color:var(--prefix-col);}
+  .lbl-root{color:var(--root-col);}
+  .lbl-suffix{color:var(--suffix-col);}
+
+  /* Info rows */
+  .verb-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;font-size:0.9rem;}
+  .verb-row:last-child{margin-bottom:0;}
+  .verb-key{font-family:'Space Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);min-width:64px;flex-shrink:0;}
+  .verb-val{color:var(--ink);line-height:1.4;}
+  .verb-val strong{color:var(--rust);}
+  .verb-val .ar-inline{font-family:'Amiri',serif;font-size:1.2rem;direction:rtl;color:var(--root-col);}
+
+  /* Root letters display */
+  .root-display{font-family:'Amiri',serif;font-size:1.6rem;direction:rtl;color:var(--root-col);letter-spacing:0.1em;margin-bottom:2px;}
+
+  /* Related forms mini-table */
+  .forms-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;}
+  .form-item{background:rgba(44,26,14,0.04);border-radius:6px;padding:6px 8px;border:1px solid rgba(44,26,14,0.08);}
+  .form-label{font-size:0.68rem;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+  .form-ar{font-family:'Amiri',serif;font-size:1.3rem;direction:rtl;color:var(--ink);}
+  .form-tr{font-size:0.72rem;font-style:italic;color:var(--muted);}
+  .form-en{font-size:0.75rem;color:var(--rust);}
+
+  /* Explanation prose */
+  .verb-explain{font-size:0.88rem;color:var(--muted);line-height:1.6;margin-top:12px;padding:10px 12px;background:rgba(212,160,23,0.06);border-radius:8px;border-left:3px solid var(--gold);text-align:left;}
+
+  /* Legend */
+  .anatomy-legend{display:flex;gap:12px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;}
+  .leg-item{display:flex;align-items:center;gap:4px;font-size:0.72rem;}
+  .leg-dot{width:9px;height:9px;border-radius:50%;}
+
+  @media(max-width:600px){
+    .arabic-text{padding:20px 16px;}
+    .story-body{padding:18px;}
+    .vocab-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));}
+    .header-arabic{font-size:2.5rem;}
+    .pop-ar{font-size:3rem;}
+    .anatomy-word{font-size:2rem;}
+    .forms-grid{grid-template-columns:1fr;}
+  }
+
+  /* ══ PRACTICE ZONE ══ */
+  .practice-zone{margin-top:24px;border-top:2px dashed rgba(212,160,23,0.25);padding-top:20px;}
+  .practice-hdr{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .practice-title{font-family:"Space Mono",monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--gold);}
+  .game-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .game-tab{padding:6px 14px;border-radius:20px;border:1px solid rgba(212,160,23,0.25);background:transparent;color:var(--muted);font-family:"Crimson Pro",serif;font-size:0.85rem;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+  .game-tab:hover{border-color:var(--gold);color:var(--ink);}
+  .game-tab.active{background:var(--gold);border-color:var(--gold);color:var(--deep);font-weight:600;}
+  .game-area{background:white;border-radius:12px;padding:22px;border:1px solid rgba(44,26,14,0.1);min-height:180px;}
+  .score-strip{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+  .score-pill{font-family:"Space Mono",monospace;font-size:0.75rem;background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.22);border-radius:20px;padding:4px 12px;color:var(--ink);}
+  .score-pill span{color:var(--gold);font-weight:700;}
+  .progress-dots{display:flex;gap:5px;flex-wrap:wrap;}
+  .pdot{width:10px;height:10px;border-radius:50%;background:rgba(44,26,14,0.12);transition:background 0.3s;}
+  .pdot.correct{background:var(--known-border);}
+  .pdot.wrong{background:var(--rust);}
+  .pdot.cur{background:var(--gold);animation:dotpulse 0.8s infinite;}
+  .flashcard-wrap{perspective:900px;width:100%;max-width:340px;margin:0 auto;height:155px;cursor:pointer;}
+  .flashcard{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.45s ease;border-radius:14px;}
+  .flashcard.flipped{transform:rotateY(180deg);}
+  .fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;}
+  .fc-front{background:linear-gradient(135deg,#FDF6E3,#EDE4CC);border:2px solid var(--gold);}
+  .fc-back{background:linear-gradient(135deg,#E8F4FF,#D4EAF7);border:2px solid var(--teal);transform:rotateY(180deg);}
+  .fc-label{font-family:"Space Mono",monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px;}
+  .fc-ar{font-family:"Amiri",serif;font-size:2.8rem;color:var(--ink);direction:rtl;line-height:1.1;}
+  .fc-tr{font-size:0.82rem;font-style:italic;color:var(--muted);margin-top:3px;}
+  .fc-en{font-size:1.25rem;font-weight:600;color:var(--teal);}
+  .fc-hint{font-size:0.72rem;color:var(--muted);margin-top:8px;font-style:italic;}
+  .fc-nav{display:flex;gap:8px;justify-content:center;margin-top:14px;align-items:center;}
+  .fc-counter{font-family:"Space Mono",monospace;font-size:0.75rem;color:var(--muted);}
+  .fc-btn{padding:5px 12px;border-radius:6px;font-size:0.8rem;font-family:"Crimson Pro",serif;cursor:pointer;border:1px solid;transition:all 0.18s;}
+  .fc-yes{background:rgba(76,175,80,0.1);border-color:var(--known-border);color:#2E7D32;}
+  .fc-yes:hover{background:var(--known-border);color:white;}
+  .fc-no{background:rgba(196,84,26,0.08);border-color:var(--rust);color:var(--rust);}
+  .fc-no:hover{background:var(--rust);color:white;}
+  .fc-skip{background:rgba(44,26,14,0.05);border-color:rgba(44,26,14,0.18);color:var(--muted);}
+  .mc-question{text-align:center;margin-bottom:14px;}
+  .mc-prompt{font-size:0.82rem;color:var(--muted);margin-bottom:6px;}
+  .mc-arabic{font-family:"Amiri",serif;font-size:2.8rem;color:var(--ink);direction:rtl;line-height:1.2;cursor:pointer;}
+  .mc-arabic:hover{color:var(--teal);}
+  .mc-translit{font-style:italic;font-size:0.85rem;color:var(--muted);margin-top:2px;}
+  .mc-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+  .mc-choice{padding:10px 12px;border-radius:8px;border:1.5px solid rgba(44,26,14,0.14);background:rgba(44,26,14,0.02);font-family:"Crimson Pro",serif;font-size:1rem;cursor:pointer;transition:all 0.2s;text-align:center;color:var(--ink);}
+  .mc-choice:hover:not([disabled]){background:rgba(212,160,23,0.12);border-color:var(--gold);}
+  .mc-choice.correct{background:rgba(76,175,80,0.15);border-color:var(--known-border);color:#1B5E20;font-weight:600;}
+  .mc-choice.wrong{background:rgba(196,84,26,0.12);border-color:var(--rust);color:#7f1010;}
+  .mc-feedback{text-align:center;margin-top:10px;font-size:0.95rem;min-height:22px;font-weight:600;}
+  .mc-feedback.good{color:#2E7D32;}
+  .mc-feedback.bad{color:var(--rust);}
+  .fb-sentence{font-family:"Amiri",serif;font-size:1.85rem;direction:rtl;text-align:right;line-height:2.3;color:var(--ink);margin-bottom:10px;background:rgba(44,26,14,0.03);border-radius:8px;padding:12px 16px;}
+  .fb-blank{display:inline-block;min-width:70px;border-bottom:3px solid var(--gold);margin:0 5px;vertical-align:bottom;text-align:center;}
+  .fb-blank.filled-correct{border-color:var(--known-border);color:#1B5E20;}
+  .fb-blank.filled-wrong{border-color:var(--rust);color:var(--rust);}
+  .fb-en-hint{font-size:0.88rem;color:var(--muted);margin-bottom:10px;padding:7px 12px;background:rgba(196,84,26,0.05);border-left:3px solid var(--rust);border-radius:0 6px 6px 0;font-style:italic;}
+  .fb-choices{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .fb-chip{font-family:"Amiri",serif;font-size:1.35rem;padding:5px 14px;border-radius:8px;border:1.5px solid rgba(44,26,14,0.16);background:white;cursor:pointer;direction:rtl;transition:all 0.18s;color:var(--ink);}
+  .fb-chip:hover:not([disabled]){background:rgba(212,160,23,0.14);border-color:var(--gold);}
+  .fb-chip.used{opacity:0.28;cursor:default;pointer-events:none;}
+  .fb-chip.correct-chip{background:rgba(76,175,80,0.14);border-color:var(--known-border);}
+  .fb-chip.wrong-chip{background:rgba(196,84,26,0.12);border-color:var(--rust);}
+  .fb-feedback{text-align:center;margin-top:8px;font-size:0.93rem;min-height:22px;font-weight:600;}
+  .fb-feedback.good{color:#2E7D32;}
+  .fb-feedback.bad{color:var(--rust);}
+  .result-screen{text-align:center;padding:8px 0;}
+  .result-emoji{font-size:2.8rem;margin-bottom:6px;}
+  .result-score{font-family:"Space Mono",monospace;font-size:1.7rem;color:var(--gold);margin-bottom:4px;}
+  .result-msg{font-size:1rem;color:var(--muted);margin-bottom:14px;}
+  .result-stars{font-size:1.8rem;letter-spacing:4px;margin-bottom:14px;}
+  .btn-restart{padding:9px 20px;border-radius:8px;border:none;color:white;font-family:"Crimson Pro",serif;font-size:1rem;cursor:pointer;font-weight:600;transition:all 0.18s;margin:4px;}
+  .btn-teal{background:var(--teal);}
+  .btn-teal:hover{filter:brightness(1.1);}
+  .btn-gold-bg{background:var(--gold);color:var(--deep);}
+  .btn-gold-bg:hover{filter:brightness(1.08);}
+  @media(max-width:600px){.mc-choices{grid-template-columns:1fr;}.fc-ar{font-size:2.2rem;}.fb-sentence{font-size:1.4rem;}}
+</style>
+</head>
+<body>
+
+<svg class="geo" viewBox="0 0 300 300">
+  <defs><pattern id="g" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+    <polygon points="30,2 58,17 58,43 30,58 2,43 2,17" fill="none" stroke="gold" stroke-width="1"/>
+    <polygon points="30,12 48,22 48,38 30,48 12,38 12,22" fill="none" stroke="gold" stroke-width="0.5"/>
+  </pattern></defs>
+  <rect width="300" height="300" fill="url(#g)"/>
+</svg>
+
+<div class="app">
+  <div class="header">
+    <div class="header-arabic">اقرأ وتعلّم</div>
+    <div class="header-title">Read &amp; Learn Arabic — Beginner to Fluent</div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-stat"><div class="stat-num" id="knownCount">0</div><div class="stat-label">Words Known</div></div>
+    <div class="progress-stat"><div class="stat-num" id="storyCount">6</div><div class="stat-label">Stories</div></div>
+    <div class="progress-stat"><div class="stat-num" id="totalWords">—</div><div class="stat-label">Total Words</div></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label">Vocabulary Progress</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <span class="toolbar-label">Text Size</span>
+    <button class="sz-btn" id="sz-sm" onclick="setSize('sm')" style="font-size:1rem">ا</button>
+    <button class="sz-btn active" id="sz-md" onclick="setSize('md')" style="font-size:1.2rem">ا</button>
+    <button class="sz-btn" id="sz-lg" onclick="setSize('lg')" style="font-size:1.45rem">ا</button>
+    <button class="sz-btn" id="sz-xl" onclick="setSize('xl')" style="font-size:1.7rem">ا</button>
+    <span class="sz-preview" id="szPrev" style="font-size:1.6rem">مرحبا</span>
+    <span style="flex:1"></span>
+    <span class="audio-pill" id="audioPill"><span class="audio-dot"></span><span id="pillTxt">Speaking…</span></span>
+    <span class="no-audio" id="noAudio">⚠ No Arabic audio on this device</span>
+  </div>
+
+  <div class="level-tabs" id="levelTabs"></div>
+  <div id="knownSection" class="known-section" style="display:none">
+    <div class="known-hdr">✓ Words You Know — tap to review</div>
+    <div class="known-chips" id="knownChips"></div>
+  </div>
+  <div id="stories"></div>
+</div>
+
+<!-- Tooltip -->
+<div class="tip" id="tip">
+  <div class="tip-ar" id="tipAr"></div>
+  <div class="tip-translit" id="tipTr"></div>
+  <div class="tip-en" id="tipEn"></div>
+  <div class="tip-verb" id="tipVerb"></div>
+  <div class="tip-hint">Click to study · 🔊 to hear</div>
+</div>
+
+<!-- Popup -->
+<div class="overlay" id="overlay">
+  <div class="popup">
+    <div class="pop-ar" id="popAr" onclick="speak(this.textContent)" title="Tap to hear"></div>
+    <div class="pop-hint">🔊 tap the word above to hear it</div>
+    <div class="pop-translit" id="popTr"></div>
+    <div class="pop-en" id="popEn"></div>
+    <div class="pop-ctx" id="popCtx"></div>
+    <!-- Verb anatomy — shown only for verbs -->
+    <div class="verb-panel" id="verbPanel" style="display:none">
+      <div class="verb-panel-hdr">⚙ How this verb is built</div>
+      <div class="verb-panel-body" id="verbPanelBody"></div>
+    </div>
+    <div class="pop-actions">
+      <button class="btn btn-play" onclick="speak(document.getElementById('popAr').textContent)">🔊 Hear It</button>
+      <button class="btn btn-outline" onclick="markKnown()">✓ I Know This</button>
+      <button class="btn btn-gold" onclick="closePopup()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   VERB ANATOMY DATA
+   Each verb entry carries:
+   - root: the three (or four) root letters as an array
+   - rootMeaning: what the root concept means
+   - tense: 'present' | 'past' | 'imperative' | 'masdar'
+   - person: 'I' | 'you(m)' | 'he' | 'she' | 'we' etc.
+   - prefix: the prefix letter(s) on this form ('' if none)
+   - suffix: the suffix letter(s) on this form ('' if none)
+   - coreAr: the root letters as they appear inside the word (may have vowel changes)
+   - pattern: e.g. "فَعَلَ" — the abstract verb pattern
+   - explain: short friendly explanation
+   - forms: related forms to show side by side [{label, ar, translit, en}]
+════════════════════════════════════════════════ */
+const VERB_DATA = {
+  // ── ذ-ه-ب (go) ──
+  "أذهب": {
+    root:['ذ','ه','ب'], rootMeaning:"go / leave",
+    tense:"present (I)", person:"I",
+    prefix:"أَ", suffix:"",
+    coreAr:"ذهب",
+    pattern:"أَفْعَل",
+    explain:"Arabic present tense is made by adding a prefix to the root. The prefix <strong>أَ</strong> (a-) signals <em>I</em>. So the three-letter root ذ-ه-ب (go) with the prefix أ gives you <strong>أذهب</strong> — 'I go'. Change the prefix and you change the person: يذهب (he goes), تذهب (she/you go).",
+    forms:[
+      {label:"I go",ar:"أَذْهَبُ",translit:"adhabu",en:"I go"},
+      {label:"He goes",ar:"يَذْهَبُ",translit:"yadhabu",en:"he goes"},
+      {label:"She goes",ar:"تَذْهَبُ",translit:"tadhabu",en:"she goes"},
+      {label:"I went",ar:"ذَهَبْتُ",translit:"dhahabtu",en:"I went"},
+    ]
+  },
+  "ذهبت": {
+    root:['ذ','ه','ب'], rootMeaning:"go / leave",
+    tense:"past (I)", person:"I",
+    prefix:"", suffix:"تُ",
+    coreAr:"ذهب",
+    pattern:"فَعَلْتُ",
+    explain:"In Arabic, the <strong>past tense</strong> works very differently to present. Instead of a prefix, you add a <strong>suffix</strong> to the root. The suffix <strong>تُ</strong> (-tu) means <em>I</em> did it. So ذ-ه-ب + تُ = <strong>ذهبتُ</strong> — 'I went'. No prefix needed at all! Compare: أذهب (I go) vs ذهبتُ (I went).",
+    forms:[
+      {label:"I went",ar:"ذَهَبْتُ",translit:"dhahabtu",en:"I went"},
+      {label:"He went",ar:"ذَهَبَ",translit:"dhahaba",en:"he went"},
+      {label:"She went",ar:"ذَهَبَتْ",translit:"dhahabat",en:"she went"},
+      {label:"I go",ar:"أَذْهَبُ",translit:"adhabu",en:"I go"},
+    ]
+  },
+  // ── ح-ب-ب (love) ──
+  "أحب": {
+    root:['ح','ب','ب'], rootMeaning:"love / like",
+    tense:"present (I)", person:"I",
+    prefix:"أُ", suffix:"",
+    coreAr:"حب",
+    pattern:"أُفْعِل",
+    explain:"The root ح-ب-ب means love. In present tense for <em>I</em>, we add the prefix <strong>أُ</strong> (u-). The doubled ب in the middle gets compressed — a common feature of roots with repeated letters. So أُ + حبب → <strong>أُحِبّ</strong> — 'I love'. The doubled letter is written with a shadda (ّ) above it.",
+    forms:[
+      {label:"I love",ar:"أُحِبُّ",translit:"uhibbu",en:"I love"},
+      {label:"He loves",ar:"يُحِبُّ",translit:"yuhibbu",en:"he loves"},
+      {label:"I loved",ar:"أَحْبَبْتُ",translit:"ahbabtu",en:"I loved"},
+      {label:"Love (noun)",ar:"حُبّ",translit:"hubb",en:"love"},
+    ]
+  },
+  // ── ش-ر-ب (drink) ──
+  "أشرب": {
+    root:['أ','ش','ر','ب'], rootMeaning:"drink",
+    tense:"present (I)", person:"I",
+    prefix:"أَ", suffix:"",
+    coreAr:"شرب",
+    pattern:"أَفْعَل",
+    explain:"Root: ش-ر-ب (drink). Add the present-tense prefix <strong>أَ</strong> for <em>I</em> → <strong>أشرب</strong> (I drink). Notice the pattern is the same as أذهب (I go) — Arabic verbs follow regular patterns once you spot the root.",
+    forms:[
+      {label:"I drink",ar:"أَشْرَبُ",translit:"ashrabu",en:"I drink"},
+      {label:"He drinks",ar:"يَشْرَبُ",translit:"yashrabu",en:"he drinks"},
+      {label:"I drank",ar:"شَرِبْتُ",translit:"sharibtu",en:"I drank"},
+      {label:"Drink!",ar:"اِشْرَبْ",translit:"ishrab",en:"drink! (imperative)"},
+    ]
+  },
+  // ── أ-ك-ل (eat) ──
+  "آكل": {
+    root:['أ','ك','ل'], rootMeaning:"eat",
+    tense:"present (I)", person:"I",
+    prefix:"آ", suffix:"",
+    coreAr:"كل",
+    pattern:"آفْعَل",
+    explain:"Root: أ-ك-ل (eat). The present prefix for <em>I</em> is أَ, but when the root itself starts with أ, the two أ letters merge and stretch into <strong>آ</strong> (a long 'aa' sound). So أَ + أكل = <strong>آكل</strong> — 'I eat'. This merging is called <em>madda</em> and just prevents two hamzas sitting together.",
+    forms:[
+      {label:"I eat",ar:"آكُلُ",translit:"akulu",en:"I eat"},
+      {label:"He eats",ar:"يَأْكُلُ",translit:"ya'kulu",en:"he eats"},
+      {label:"I ate",ar:"أَكَلْتُ",translit:"akaltu",en:"I ate"},
+      {label:"Food",ar:"أَكْل",translit:"akl",en:"food / eating"},
+    ]
+  },
+  // ── ي-ق-ظ (wake) ──
+  "أستيقظ": {
+    root:['ي','ق','ظ'], rootMeaning:"be awake / alert",
+    tense:"present (I)", person:"I",
+    prefix:"أَسْتَ", suffix:"",
+    coreAr:"يقظ",
+    pattern:"أَسْتَفْعِل (Form X)",
+    explain:"This is a <strong>Form X</strong> verb — one of Arabic's ten verb patterns. Form X adds the prefix <strong>أَسْتَ</strong> and carries the idea of 'seeking' or 'causing oneself to' do something. أَسْتَيْقَظ literally means 'I make myself awake' → 'I wake up'. The longer prefix is the whole clue — once you know Form X, you'll recognise it everywhere.",
+    forms:[
+      {label:"I wake up",ar:"أَسْتَيْقِظُ",translit:"astayqizu",en:"I wake up"},
+      {label:"He wakes up",ar:"يَسْتَيْقِظُ",translit:"yastayqizu",en:"he wakes up"},
+      {label:"I woke up",ar:"اِسْتَيْقَظْتُ",translit:"istayqaztu",en:"I woke up"},
+    ]
+  },
+  // ── س-ف-ر (travel) ──
+  "سافرت": {
+    root:['س','ف','ر'], rootMeaning:"travel / journey",
+    tense:"past (I)", person:"I",
+    prefix:"", suffix:"تُ",
+    coreAr:"سافر",
+    pattern:"فَاعَلْتُ (Form III past + I-suffix)",
+    explain:"Root: س-ف-ر (travel). This is a <strong>Form III</strong> verb, which stretches the first root letter with a long vowel: سَافَرَ (he travelled). For <em>I</em> in the past, add the suffix <strong>تُ</strong> → <strong>سافرتُ</strong>. Form III often adds the idea of doing something with/to someone — سافَرَ means 'he made a journey'.",
+    forms:[
+      {label:"I travelled",ar:"سَافَرْتُ",translit:"safart",en:"I travelled"},
+      {label:"He travelled",ar:"سَافَرَ",translit:"safara",en:"he travelled"},
+      {label:"I travel",ar:"أُسَافِرُ",translit:"usafiru",en:"I travel"},
+      {label:"Travel (noun)",ar:"سَفَر",translit:"safar",en:"journey / travel"},
+    ]
+  },
+  // ── ز-ر (visit) ──
+  "زرت": {
+    root:['ز','و','ر'], rootMeaning:"visit",
+    tense:"past (I)", person:"I",
+    prefix:"", suffix:"تُ",
+    coreAr:"زر",
+    pattern:"فَعَلْتُ",
+    explain:"Root: ز-و-ر (visit). In the past tense, the middle weak letter و disappears — this is a <strong>hollow verb</strong>, very common in Arabic. So instead of زَوَرَ, it contracts to زَارَ (he visited). Add <strong>تُ</strong> for <em>I</em> → <strong>زُرْتُ</strong> (I visited). The vowel shortens too. Hollow verbs look shorter than you'd expect!",
+    forms:[
+      {label:"I visited",ar:"زُرْتُ",translit:"zurtu",en:"I visited"},
+      {label:"He visited",ar:"زَارَ",translit:"zara",en:"he visited"},
+      {label:"I visit",ar:"أَزُورُ",translit:"azuru",en:"I visit"},
+      {label:"Visit (noun)",ar:"زِيَارَة",translit:"ziyara",en:"visit"},
+    ]
+  },
+  // ── ش-ر-ي (buy) ──
+  "اشتريت": {
+    root:['ش','ر','ي'], rootMeaning:"buy / purchase",
+    tense:"past (I)", person:"I",
+    prefix:"اِشْتَ", suffix:"يْتُ",
+    coreAr:"شر",
+    pattern:"اِفْتَعَلْتُ (Form VIII)",
+    explain:"Root: ش-ر-ي (buy). This is <strong>Form VIII</strong>, which inserts the letter <strong>تَ</strong> after the first root letter and adds the prefix اِ. The pattern is اِفْتَعَل. The final weak letter ي merges into the suffix: اِشْتَرَى (he bought) → اِشْتَرَيْتُ (I bought). Form VIII often carries an active, deliberate sense.",
+    forms:[
+      {label:"I bought",ar:"اِشْتَرَيْتُ",translit:"ishtaraytu",en:"I bought"},
+      {label:"He bought",ar:"اِشْتَرَى",translit:"ishtara",en:"he bought"},
+      {label:"I buy",ar:"أَشْتَرِي",translit:"ashtari",en:"I buy"},
+      {label:"Purchase",ar:"شِرَاء",translit:"shira'",en:"purchase / buying"},
+    ]
+  },
+  // ── ع-و-د (return) ──
+  "أعود": {
+    root:['ع','و','د'], rootMeaning:"return / come back",
+    tense:"present (I)", person:"I",
+    prefix:"أَ", suffix:"",
+    coreAr:"عود",
+    pattern:"أَفُول (hollow present)",
+    explain:"Root: ع-و-د (return). Another hollow verb — the middle letter و is weak and changes with the vowels. In the present tense with the <em>I</em>-prefix أَ, it surfaces as <strong>أعود</strong> (a-'ood). The و here is actually part of the word because the present vowel pattern keeps it visible, unlike some past forms where it disappears.",
+    forms:[
+      {label:"I return",ar:"أَعُودُ",translit:"a'udu",en:"I return"},
+      {label:"He returns",ar:"يَعُودُ",translit:"ya'udu",en:"he returns"},
+      {label:"I returned",ar:"عُدْتُ",translit:"'udtu",en:"I returned"},
+      {label:"Return (noun)",ar:"عَوْدَة",translit:"'awda",en:"return / comeback"},
+    ]
+  },
+  // ── ش-ع-ر (feel) ──
+  "أشعر": {
+    root:['ش','ع','ر'], rootMeaning:"feel / sense / perceive",
+    tense:"present (I)", person:"I",
+    prefix:"أَ", suffix:"",
+    coreAr:"شعر",
+    pattern:"أَفْعُر",
+    explain:"Root: ش-ع-ر (feel/sense). Present tense, first person — add prefix <strong>أَ</strong> → <strong>أشعر</strong> (I feel). The same root gives شِعْر (poetry) and شَعْر (hair) — Arabic roots radiate out into many related words. Once you know a root, you can often guess new words built from it.",
+    forms:[
+      {label:"I feel",ar:"أَشْعُرُ",translit:"ash'uru",en:"I feel"},
+      {label:"He feels",ar:"يَشْعُرُ",translit:"yash'uru",en:"he feels"},
+      {label:"I felt",ar:"شَعَرْتُ",translit:"sha'artu",en:"I felt"},
+      {label:"Poetry",ar:"شِعْر",translit:"shi'r",en:"poetry (same root!)"},
+    ]
+  },
+  // ── ر-ي-د (want) ──
+  "أريد": {
+    root:['ر','و','د'], rootMeaning:"want / desire",
+    tense:"present (I)", person:"I",
+    prefix:"أُ", suffix:"",
+    coreAr:"ريد",
+    pattern:"أُفِيل (Form IV hollow)",
+    explain:"Root: ر-و-د (want/seek). This is a <strong>Form IV</strong> verb with a hollow middle. Form IV adds an أ to the beginning and doubles the vowel effect. In the present tense for <em>I</em>: أُرِيدُ → <strong>أريد</strong> (I want/wish). You'll hear أريد أن... (I want to...) constantly in everyday Arabic.",
+    forms:[
+      {label:"I want",ar:"أُرِيدُ",translit:"uridu",en:"I want"},
+      {label:"He wants",ar:"يُرِيدُ",translit:"yuridu",en:"he wants"},
+      {label:"I wanted",ar:"أَرَدْتُ",translit:"aradtu",en:"I wanted"},
+      {label:"Will / intention",ar:"إِرَادَة",translit:"irada",en:"will / desire"},
+    ]
+  },
+  // ══ Level 4 new verbs ══
+
+  // ق-ر-أ (read) — past
+  "قرأت": {
+    root:['ق','ر','أ'], rootMeaning:"read",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"قرأ", pattern:"فَعَلْتُ",
+    explain:"Root: ق-ر-أ (read). Same past pattern you know: root + <strong>تُ</strong> = <strong>قَرَأْتُ</strong> (I read). The root ends in hamza ء which stays stable. The same root gives قُرْآن (Quran — literally 'the recitation'), قِرَاءَة (reading). A truly important root.",
+    forms:[
+      {label:"I read (past)",ar:"قَرَأْتُ",translit:"qara'tu",en:"I read"},
+      {label:"He read",ar:"قَرَأَ",translit:"qara'a",en:"he read"},
+      {label:"I read (present)",ar:"أَقْرَأُ",translit:"aqra'u",en:"I read"},
+      {label:"Reading",ar:"قِرَاءَة",translit:"qira'a",en:"reading"},
+    ]
+  },
+ // ق-ر-أ (read) — present
+  "أقرأ": {
+    root:['ق','ر','أ'], rootMeaning:"read",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"قرأ", pattern:"أَفْعَل",
+    explain:"Same root ق-ر-أ. Present tense swaps the suffix تُ for the prefix <strong>أَ</strong> → <strong>أقرأُ</strong> (I read). This is the core rule: <em>past = suffix after root, present = prefix before root</em>. The same swap works for every regular verb.",
+    forms:[
+      {label:"I read",ar:"أَقْرَأُ",translit:"aqra'u",en:"I read"},
+      {label:"He reads",ar:"يَقْرَأُ",translit:"yaqra'u",en:"he reads"},
+      {label:"She reads",ar:"تَقْرَأُ",translit:"taqra'u",en:"she reads"},
+      {label:"I read (past)",ar:"قَرَأْتُ",translit:"qara'tu",en:"I read"},
+    ]
+  },
+ // ك-ت-ب (write) — past
+  "كتبت": {
+    root:['ك','ت','ب'], rootMeaning:"write",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"كتب", pattern:"فَعَلْتُ",
+    explain:"Root: ك-ت-ب (write) — one of Arabic's most productive roots. Past + تُ = <strong>كَتَبْتُ</strong> (I wrote). Same root: كِتَاب (book), كَاتِب (writer), مَكْتَبَة (library). Learn the root once, get the whole family.",
+    forms:[
+      {label:"I wrote",ar:"كَتَبْتُ",translit:"katabtu",en:"I wrote"},
+      {label:"He wrote",ar:"كَتَبَ",translit:"kataba",en:"he wrote"},
+      {label:"I write",ar:"أَكْتُبُ",translit:"aktubu",en:"I write"},
+      {label:"Book",ar:"كِتَاب",translit:"kitab",en:"book (same root!)"},
+    ]
+  },
+ // ك-ت-ب (write) — present
+  "أكتب": {
+    root:['ك','ت','ب'], rootMeaning:"write",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"كتب", pattern:"أَفْعُل",
+    explain:"Root ك-ت-ب. Present tense: prefix أَ → <strong>أكتبُ</strong> (I write). Compare كتبتُ (past). The switch is always: drop تُ, add أَ at the front. يَكْتُبُ (he writes), نَكْتُبُ (we write) — change only the prefix letter.",
+    forms:[
+      {label:"I write",ar:"أَكْتُبُ",translit:"aktubu",en:"I write"},
+      {label:"He writes",ar:"يَكْتُبُ",translit:"yaktubu",en:"he writes"},
+      {label:"We write",ar:"نَكْتُبُ",translit:"naktubu",en:"we write"},
+      {label:"I wrote",ar:"كَتَبْتُ",translit:"katabtu",en:"I wrote"},
+    ]
+  },
+ // ج-ل-س (sit) — past we
+  "جلسنا": {
+    root:['ج','ل','س'], rootMeaning:"sit",
+    tense:"past (we)", person:"we", prefix:"", suffix:"نَا", coreAr:"جلس", pattern:"فَعَلْنَا",
+    explain:"Root: ج-ل-س (sit). For <em>we</em> in the past, add <strong>نَا</strong> instead of تُ: <strong>جَلَسْنَا</strong> (we sat). The suffix key: تُ = I did it, نَا = we did it. This works for every regular verb — try it: ذهبنا (we went), شربنا (we drank), كتبنا (we wrote).",
+    forms:[
+      {label:"We sat",ar:"جَلَسْنَا",translit:"jalasna",en:"we sat"},
+      {label:"I sat",ar:"جَلَسْتُ",translit:"jalastu",en:"I sat"},
+      {label:"He sat",ar:"جَلَسَ",translit:"jalasa",en:"he sat"},
+      {label:"I sit",ar:"أَجْلِسُ",translit:"ajlisu",en:"I sit"},
+    ]
+  },
+ // ج-ل-س (sit) — present
+  "أجلس": {
+    root:['ج','ل','س'], rootMeaning:"sit",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"جلس", pattern:"أَفْعِل",
+    explain:"Root ج-ل-س. Present: prefix أَ → <strong>أجلسُ</strong> (I sit). Notice the middle vowel is kasra (i): أَجْلِس. Different verbs have slightly different internal vowels in the present, but the prefix rule never changes.",
+    forms:[
+      {label:"I sit",ar:"أَجْلِسُ",translit:"ajlisu",en:"I sit"},
+      {label:"He sits",ar:"يَجْلِسُ",translit:"yajlisu",en:"he sits"},
+      {label:"We sit",ar:"نَجْلِسُ",translit:"najlisu",en:"we sit"},
+      {label:"We sat",ar:"جَلَسْنَا",translit:"jalasna",en:"we sat"},
+    ]
+  },
+ // م-ش-ي (walk) — past
+  "مشيت": {
+    root:['م','ش','ي'], rootMeaning:"walk",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"مش", pattern:"فَعَيْتُ",
+    explain:"Root: م-ش-ي (walk). A <strong>weak verb</strong> — the final letter ي is unstable and contracts in the past. مَشَى + تُ → <strong>مَشَيْتُ</strong> (I walked). The ي becomes a short vowel before the suffix. He walked = مَشَى (the ى is a long 'a' sound).",
+    forms:[
+      {label:"I walked",ar:"مَشَيْتُ",translit:"mashaytu",en:"I walked"},
+      {label:"He walked",ar:"مَشَى",translit:"masha",en:"he walked"},
+      {label:"She walked",ar:"مَشَتْ",translit:"mashat",en:"she walked"},
+      {label:"I walk",ar:"أَمْشِي",translit:"amshi",en:"I walk"},
+    ]
+  },
+ // ر-أ-ي (see) — past
+  "رأيت": {
+    root:['ر','أ','ي'], rootMeaning:"see",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"رأي", pattern:"فَعَيْتُ",
+    explain:"Root: ر-أ-ي (see). Another weak final verb. رَأَى + تُ → <strong>رَأَيْتُ</strong> (I saw). Seeing, hearing, knowing — the perception verbs are used constantly. Notice the same weak-ending pattern as مشيتُ: the ي shows up between the root and the تُ suffix.",
+    forms:[
+      {label:"I saw",ar:"رَأَيْتُ",translit:"ra'aytu",en:"I saw"},
+      {label:"He saw",ar:"رَأَى",translit:"ra'a",en:"he saw"},
+      {label:"I see",ar:"أَرَى",translit:"ara",en:"I see"},
+      {label:"Vision",ar:"رُؤْيَة",translit:"ru'ya",en:"vision / sight"},
+    ]
+  },
+ // س-م-ع (hear) — past
+  "سمعت": {
+    root:['س','م','ع'], rootMeaning:"hear / listen",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"سمع", pattern:"فَعِلْتُ",
+    explain:"Root: س-م-ع (hear). Regular verb: سَمِعَ + تُ = <strong>سَمِعْتُ</strong> (I heard). Middle vowel is kasra (i): سَمِعَ not سَمَعَ. The root gives سَمَاعَة (earphone/speaker) and اِسْتَمَعَ (to listen attentively — Form X of the same root).",
+    forms:[
+      {label:"I heard",ar:"سَمِعْتُ",translit:"sami'tu",en:"I heard"},
+      {label:"He heard",ar:"سَمِعَ",translit:"sami'a",en:"he heard"},
+      {label:"I hear",ar:"أَسْمَعُ",translit:"asma'u",en:"I hear"},
+      {label:"I listen",ar:"أَسْتَمِعُ",translit:"astami'u",en:"I listen (Form X)"},
+    ]
+  },
+ // ف-ه-م (understand) — past
+  "فهمت": {
+    root:['ف','ه','م'], rootMeaning:"understand",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"فهم", pattern:"فَعِلْتُ",
+    explain:"Root: ف-ه-م (understand). فَهِمَ + تُ = <strong>فَهِمْتُ</strong> (I understood). Middle kasra (i-vowel) again. A beautiful root: فَهْم (understanding), مَفْهُوم (concept/understood), فَاهِم (one who understands). In Arabic, the abstract concept and its concrete forms share the same root.",
+    forms:[
+      {label:"I understood",ar:"فَهِمْتُ",translit:"fahimtu",en:"I understood"},
+      {label:"He understood",ar:"فَهِمَ",translit:"fahima",en:"he understood"},
+      {label:"I understand",ar:"أَفْهَمُ",translit:"afhamu",en:"I understand"},
+      {label:"Concept",ar:"مَفْهُوم",translit:"mafhum",en:"concept (same root!)"},
+    ]
+  },
+ // ب-د-أ (start) — past
+  "بدأت": {
+    root:['ب','د','أ'], rootMeaning:"begin / start",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"بدأ", pattern:"فَعَلْتُ",
+    explain:"Root: ب-د-أ (begin). Regular verb ending in hamza. بَدَأَ + تُ = <strong>بَدَأْتُ</strong> (I began/started). The hamza sits on an alif seat and stays stable. Present: أَبْدَأُ (I begin). A great verb to practise the tense switch with — very common in everyday conversation.",
+    forms:[
+      {label:"I started",ar:"بَدَأْتُ",translit:"bada'tu",en:"I started"},
+      {label:"He started",ar:"بَدَأَ",translit:"bada'a",en:"he started"},
+      {label:"I start",ar:"أَبْدَأُ",translit:"abda'u",en:"I start"},
+      {label:"Beginning",ar:"بِدَايَة",translit:"bidaya",en:"beginning"},
+    ]
+  },
+ // ط-ب-خ (cook) — past
+  "طبخت": {
+    root:['ط','ب','خ'], rootMeaning:"cook",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"طبخ", pattern:"فَعَلْتُ",
+    explain:"Root: ط-ب-خ (cook). Completely regular. طَبَخَ + تُ = <strong>طَبَخْتُ</strong> (I cooked). By now the pattern should feel natural: the suffix تُ always signals past tense, first person. Swap it for the prefix أَ and you get the present.",
+    forms:[
+      {label:"I cooked",ar:"طَبَخْتُ",translit:"tabakhtu",en:"I cooked"},
+      {label:"He cooked",ar:"طَبَخَ",translit:"tabacha",en:"he cooked"},
+      {label:"I cook",ar:"أَطْبُخُ",translit:"atbukhu",en:"I cook"},
+      {label:"Cooking",ar:"طَبْخ",translit:"tabkh",en:"cooking"},
+    ]
+  },
+ // ط-ب-خ (cook) — present
+  "أطبخ": {
+    root:['ط','ب','خ'], rootMeaning:"cook",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"طبخ", pattern:"أَفْعُل",
+    explain:"Root ط-ب-خ, present: prefix أَ → <strong>أطبخُ</strong> (I cook). The pattern is now fully familiar: prefix أَ = I (present), suffix تُ = I (past). يَطْبُخُ (he cooks), نَطْبُخُ (we cook) — only the prefix changes.",
+    forms:[
+      {label:"I cook",ar:"أَطْبُخُ",translit:"atbukhu",en:"I cook"},
+      {label:"He cooks",ar:"يَطْبُخُ",translit:"yatbukhu",en:"he cooks"},
+      {label:"We cook",ar:"نَطْبُخُ",translit:"natbukhu",en:"we cook"},
+      {label:"I cooked",ar:"طَبَخْتُ",translit:"tabakhtu",en:"I cooked"},
+    ]
+  },
+ // ن-ظ-ف (clean)
+  "نظفت": {
+    root:['ن','ظ','ف'], rootMeaning:"clean",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"نظف", pattern:"فَعَّلْتُ (Form II)",
+    explain:"Root: ن-ظ-ف (clean). This is <strong>Form II</strong> — the middle root letter is doubled: نَظَّفَ (to clean something). Form II often makes a verb transitive. Past + تُ = <strong>نَظَّفْتُ</strong> (I cleaned). The doubled ظ is written with a shadda (ّ). نَظِيف (clean, the adjective) shares the same root.",
+    forms:[
+      {label:"I cleaned",ar:"نَظَّفْتُ",translit:"nazzaftu",en:"I cleaned"},
+      {label:"He cleaned",ar:"نَظَّفَ",translit:"nazzafa",en:"he cleaned"},
+      {label:"I clean",ar:"أُنَظِّفُ",translit:"unazzif",en:"I clean"},
+      {label:"Clean (adj)",ar:"نَظِيف",translit:"nazif",en:"clean"},
+    ]
+  },
+ // ع-ل-م (know) — present
+  "أعلم": {
+    root:['ع','ل','م'], rootMeaning:"know",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"علم", pattern:"أَفْعَل",
+    explain:"Root: ع-ل-م (know/knowledge) — one of Arabic's most important roots. عِلْم (knowledge/science), مُعَلِّم (teacher), عَالَم (world). Present: prefix أَ + علم = <strong>أَعْلَمُ</strong> (I know). Once you spot this root, you will see it everywhere.",
+    forms:[
+      {label:"I know",ar:"أَعْلَمُ",translit:"a'lamu",en:"I know"},
+      {label:"He knows",ar:"يَعْلَمُ",translit:"ya'lamu",en:"he knows"},
+      {label:"I knew",ar:"عَلِمْتُ",translit:"'alimtu",en:"I knew"},
+      {label:"Knowledge",ar:"عِلْم",translit:"'ilm",en:"knowledge / science"},
+    ]
+  },
+ // د-ر-س (study) — present
+  "أدرس": {
+    root:['د','ر','س'], rootMeaning:"study / learn",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"درس", pattern:"أَفْعُل",
+    explain:"Root: د-ر-س (study). Regular: prefix أَ + درس = <strong>أَدْرُسُ</strong> (I study). Same root: دَرْس (lesson), دِرَاسَة (study/studies), مَدْرَسَة (school — literally 'place of study'). The root مَفْعَلَة pattern makes places: مَدْرَسَة, مَكْتَبَة, مَطْبَخ (kitchen — from ط-ب-خ!).",
+    forms:[
+      {label:"I study",ar:"أَدْرُسُ",translit:"adrusu",en:"I study"},
+      {label:"He studies",ar:"يَدْرُسُ",translit:"yadrusu",en:"he studies"},
+      {label:"I studied",ar:"دَرَسْتُ",translit:"darastu",en:"I studied"},
+      {label:"School",ar:"مَدْرَسَة",translit:"madrasa",en:"school"},
+    ]
+  },
+ // ل-ق-ي (meet) — past I
+  "التقيت": {
+    root:['ل','ق','ي'], rootMeaning:"meet / encounter",
+    tense:"past (I)", person:"I", prefix:"اِ", suffix:"تُ", coreAr:"لتقي", pattern:"اِفْتَعَلْتُ (Form VIII)",
+    explain:"Root: ل-ق-ي (meet). Form VIII inserts تَ after the first root letter. اِلْتَقَى + تُ = <strong>اِلْتَقَيْتُ</strong> (I met). Both the Form VIII prefix اِ and the past suffix تُ appear together. The weak final ي contracts before تُ — same pattern as رأيتُ and مشيتُ.",
+    forms:[
+      {label:"I met",ar:"اِلْتَقَيْتُ",translit:"iltaqaytu",en:"I met"},
+      {label:"He met",ar:"اِلْتَقَى",translit:"iltaqa",en:"he met"},
+      {label:"We met",ar:"اِلْتَقَيْنَا",translit:"iltaqayna",en:"we met"},
+      {label:"We meet",ar:"نَلْتَقِي",translit:"naltaqi",en:"we meet"},
+    ]
+  },
+ // ل-ق-ي (meet) — present we
+  "نلتقي": {
+    root:['ل','ق','ي'], rootMeaning:"meet / encounter",
+    tense:"present (we)", person:"we", prefix:"نَ", suffix:"", coreAr:"لتقي", pattern:"نَفْتَعِل (Form VIII, we)",
+    explain:"Same root ل-ق-ي, Form VIII, but present tense for <em>we</em>. The prefix for 'we' is <strong>نَ</strong> (na-). So: نَ + لتقي = <strong>نَلْتَقِي</strong> (we meet). Prefix guide: أَ = I, يَ = he, تَ = she/you, نَ = we. Change just the first letter of the present prefix and you change who is doing the action.",
+    forms:[
+      {label:"We meet",ar:"نَلْتَقِي",translit:"naltaqi",en:"we meet"},
+      {label:"I meet",ar:"أَلْتَقِي",translit:"altaqi",en:"I meet"},
+      {label:"He meets",ar:"يَلْتَقِي",translit:"yaltaqi",en:"he meets"},
+      {label:"We met",ar:"اِلْتَقَيْنَا",translit:"iltaqayna",en:"we met"},
+    ]
+  },
+ // ط-ل-ب (order/request) — past
+  "طلبت": {
+    root:['ط','ل','ب'], rootMeaning:"ask for / order / request",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"طلب", pattern:"فَعَلْتُ",
+    explain:"Root: ط-ل-ب (ask/request/order). Regular: طَلَبَ + تُ = <strong>طَلَبْتُ</strong> (I ordered/requested). Same root: طَالِب (student — literally 'one who seeks knowledge'), طَلَب (request), مَطْلُوب (required/wanted). Arabic roots tell the story of meaning.",
+    forms:[
+      {label:"I ordered",ar:"طَلَبْتُ",translit:"talabtu",en:"I ordered"},
+      {label:"He ordered",ar:"طَلَبَ",translit:"talaba",en:"he ordered"},
+      {label:"I order",ar:"أَطْلُبُ",translit:"atlubu",en:"I order"},
+      {label:"Student",ar:"طَالِب",translit:"talib",en:"student (same root!)"},
+    ]
+  },
+ // ت-ح-د-ث (talk) — past we
+  "تحدثنا": {
+    root:['ح','د','ث'], rootMeaning:"talk / speak",
+    tense:"past (we)", person:"we", prefix:"تَ", suffix:"نَا", coreAr:"حدث", pattern:"تَفَاعَلْنَا (Form VI)",
+    explain:"Root: ح-د-ث (speak/event). <strong>Form VI</strong> (تَفَاعَل) means doing something mutually — talking *with* each other. Past for <em>we</em>: تَحَادَثَ + نَا = <strong>تَحَادَثْنَا</strong> (we talked together). Both the Form VI prefix تَ and the 'we' suffix نَا are visible. Notice نَا always marks 'we did it' in past tense.",
+    forms:[
+      {label:"We talked",ar:"تَحَادَثْنَا",translit:"tahadathna",en:"we talked"},
+      {label:"I talked",ar:"تَحَادَثْتُ",translit:"tahadathtu",en:"I talked"},
+      {label:"We talk",ar:"نَتَحَادَثُ",translit:"natahaddath",en:"we talk"},
+      {label:"Conversation",ar:"مُحَادَثَة",translit:"muhadatha",en:"conversation"},
+    ]
+  },
+ // أ-ت-ق-د-م (progress) — present
+  "أتقدم": {
+    root:['ق','د','م'], rootMeaning:"advance / precede",
+    tense:"present (I)", person:"I", prefix:"أَتَ", suffix:"", coreAr:"قدم", pattern:"أَتَفَعَّل (Form V)",
+    explain:"Root: ق-د-م (go forward/advance). <strong>Form V</strong> adds تَ before the root and doubles the middle letter, giving a reflexive meaning — 'to advance oneself / to progress'. Present for I: أَتَقَدَّمُ → <strong>أتقدمُ</strong>. The root also gives مُقَدِّمَة (introduction — literally 'what comes before') and قَدِيم (old/ancient — 'that which came before').",
+    forms:[
+      {label:"I progress",ar:"أَتَقَدَّمُ",translit:"ataqaddam",en:"I progress"},
+      {label:"He progresses",ar:"يَتَقَدَّمُ",translit:"yataqaddam",en:"he progresses"},
+      {label:"I progressed",ar:"تَقَدَّمْتُ",translit:"taqaddamtu",en:"I progressed"},
+      {label:"Progress",ar:"تَقَدُّم",translit:"taqaddum",en:"progress (noun)"},
+    ]
+  },
+
+  // ══ Level 4 & 5 additional verbs ══
+
+  // ر-ك-ب (ride/take transport)
+  "ركبت": {
+    root:['ر','ك','ب'], rootMeaning:"ride / take (transport)",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"ركب", pattern:"فَعِلْتُ",
+    explain:"Root: ر-ك-ب (ride/mount). Regular past with kasra middle vowel: رَكِبَ + تُ = <strong>رَكِبْتُ</strong> (I rode/took). Used for any vehicle — bus, train, horse. رَاكِب (passenger/rider) shares the root.",
+    forms:[{label:"I rode",ar:"رَكِبْتُ",translit:"rakibtu",en:"I rode"},{label:"He rode",ar:"رَكِبَ",translit:"rakiba",en:"he rode"},{label:"I ride",ar:"أَرْكَبُ",translit:"arkabu",en:"I ride"},{label:"Passenger",ar:"رَاكِب",translit:"rakib",en:"passenger"},]
+  },
+  "نزلت": {
+    root:['ن','ز','ل'], rootMeaning:"descend / get off",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"نزل", pattern:"فَعَلْتُ",
+    explain:"Root: ن-ز-ل (go down/get off). نَزَلَ + تُ = <strong>نَزَلْتُ</strong> (I got off/descended). Used for getting off buses and trains. The opposite is صَعِدَ (ascended/got on).",
+    forms:[{label:"I got off",ar:"نَزَلْتُ",translit:"nazaltu",en:"I got off"},{label:"He got off",ar:"نَزَلَ",translit:"nazala",en:"he got off"},{label:"I get off",ar:"أَنْزِلُ",translit:"anzilu",en:"I get off"},{label:"Descent",ar:"نُزُول",translit:"nuzul",en:"descent"},]
+  },
+  "دخلت": {
+    root:['د','خ','ل'], rootMeaning:"enter / go in",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"دخل", pattern:"فَعَلْتُ",
+    explain:"Root: د-خ-ل (enter). دَخَلَ + تُ = <strong>دَخَلْتُ</strong> (I entered). The opposite root is خ-ر-ج (exit): خَرَجْتُ (I left). In Arabic, learning verbs in opposite pairs — enter/exit, go/come, sit/stand — doubles your vocabulary efficiently.",
+    forms:[{label:"I entered",ar:"دَخَلْتُ",translit:"dakhaltu",en:"I entered"},{label:"He entered",ar:"دَخَلَ",translit:"dakhala",en:"he entered"},{label:"I enter",ar:"أَدْخُلُ",translit:"adkhulu",en:"I enter"},{label:"I left",ar:"خَرَجْتُ",translit:"kharajtu",en:"I left (opposite)"},]
+  },
+  "عدت": {
+    root:['ع','و','د'], rootMeaning:"return / come back",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"عد", pattern:"فُلْتُ (hollow past)",
+    explain:"Root: ع-و-د (return). Hollow verb — the middle و disappears in the past. عَادَ + تُ → vowel shortens: <strong>عُدْتُ</strong> (I returned). In the present, the و reappears: أَعُودُ (I return). Hollow verbs contract in past, expand in present — a key pattern to know.",
+    forms:[{label:"I returned",ar:"عُدْتُ",translit:"'udtu",en:"I returned"},{label:"He returned",ar:"عَادَ",translit:"'ada",en:"he returned"},{label:"I return",ar:"أَعُودُ",translit:"a'udu",en:"I return"},{label:"Return",ar:"عَوْدَة",translit:"'awda",en:"return"},]
+  },
+  "أفضل": {
+    root:['ف','ض','ل'], rootMeaning:"prefer / be better",
+    tense:"present (I)", person:"I", prefix:"أُ", suffix:"", coreAr:"فضل", pattern:"أُفَضِّل (Form II)",
+    explain:"Root: ف-ض-ل. Form II — middle doubled: فَضَّلَ (to prefer). Present for I: <strong>أُفَضِّلُ</strong> (I prefer). أَفْضَل means 'better/best'. Form II with doubled middle is very common — you also saw it in نَظَّفَ (cleaned) and فَكَّرَ (thought).",
+    forms:[{label:"I prefer",ar:"أُفَضِّلُ",translit:"ufaddil",en:"I prefer"},{label:"He prefers",ar:"يُفَضِّلُ",translit:"yufaddil",en:"he prefers"},{label:"I preferred",ar:"فَضَّلْتُ",translit:"faddalt",en:"I preferred"},{label:"Better",ar:"أَفْضَل",translit:"afdal",en:"better / best"},]
+  },
+  "حصلت": {
+    root:['ح','ص','ل'], rootMeaning:"get / obtain / happen",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"حصل", pattern:"فَعَلْتُ",
+    explain:"Root: ح-ص-ل (obtain/happen). حَصَلَ + تُ = <strong>حَصَلْتُ</strong> (I got). حَصَلَ also means 'it happened'. You'll hear حَصَلْتُ عَلَى (I obtained/got) constantly. حُصُول (obtaining), حَاصِل (result) share the root.",
+    forms:[{label:"I got",ar:"حَصَلْتُ",translit:"hasaltu",en:"I got"},{label:"He got",ar:"حَصَلَ",translit:"hasala",en:"he got"},{label:"I get",ar:"أَحْصُلُ",translit:"ahsulu",en:"I get"},{label:"Result",ar:"حَاصِل",translit:"hasil",en:"result"},]
+  },
+  "كنت": {
+    root:['ك','و','ن'], rootMeaning:"be / exist",
+    tense:"past (I)", person:"I", prefix:"", suffix:"تُ", coreAr:"كن", pattern:"فُلْتُ (hollow past)",
+    explain:"Root: ك-و-ن (be/exist). كَانَ is the past of 'to be' — one of the most important words in Arabic. Hollow past: كَانَ + تُ → <strong>كُنْتُ</strong> (I was). كُنْتُ + present verb = 'used to': كُنْتُ أَذْهَبُ = 'I used to go'. كَانَ unlocks the past continuous — a huge leap in expression.",
+    forms:[{label:"I was",ar:"كُنْتُ",translit:"kuntu",en:"I was / I used to"},{label:"He was",ar:"كَانَ",translit:"kana",en:"he was"},{label:"She was",ar:"كَانَتْ",translit:"kanat",en:"she was"},{label:"We were",ar:"كُنَّا",translit:"kunna",en:"we were"},]
+  },
+  "أفكر": {
+    root:['ف','ك','ر'], rootMeaning:"think / reflect",
+    tense:"present (I)", person:"I", prefix:"أُ", suffix:"", coreAr:"فكر", pattern:"أُفَكِّر (Form II)",
+    explain:"Root: ف-ك-ر (think). Form II with doubled middle: فَكَّرَ. Present for I: <strong>أُفَكِّرُ</strong> (I think). فِكْرَة (idea), فِكْر (thought), مُفَكِّر (thinker) — all from ف-ك-ر. The prefix أُ (u-) rather than أَ (a-) is the Form II present marker.",
+    forms:[{label:"I think",ar:"أُفَكِّرُ",translit:"ufakkiru",en:"I think"},{label:"He thinks",ar:"يُفَكِّرُ",translit:"yufakkiru",en:"he thinks"},{label:"I thought",ar:"فَكَّرْتُ",translit:"fakkart",en:"I thought"},{label:"Idea",ar:"فِكْرَة",translit:"fikra",en:"idea"},]
+  },
+  "أحلم": {
+    root:['ح','ل','م'], rootMeaning:"dream",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"حلم", pattern:"أَفْعُل",
+    explain:"Root: ح-ل-م (dream). Regular Form I: prefix أَ + حلم = <strong>أَحْلُمُ</strong> (I dream). حُلْم (a dream), أَحْلَام (dreams — plural). أَحْلُم بـ + أَن + verb = 'I dream of doing...'. Past: حَلَمْتُ (I dreamed).",
+    forms:[{label:"I dream",ar:"أَحْلُمُ",translit:"ahlumu",en:"I dream"},{label:"He dreams",ar:"يَحْلُمُ",translit:"yahlumu",en:"he dreams"},{label:"I dreamed",ar:"حَلَمْتُ",translit:"halamtu",en:"I dreamed"},{label:"Dream",ar:"حُلْم",translit:"hulm",en:"dream"},]
+  },
+  "أركض": {
+    root:['ر','ك','ض'], rootMeaning:"run",
+    tense:"present (I)", person:"I", prefix:"أَ", suffix:"", coreAr:"ركض", pattern:"أَفْعُل",
+    explain:"Root: ر-ك-ض (run). Regular: prefix أَ + ركض = <strong>أَرْكُضُ</strong> (I run). Past: رَكَضْتُ (I ran). The natural complement to مَشَيْتُ (I walked) — now you can describe speed of movement. يَرْكُضُ (he runs), نَرْكُضُ (we run).",
+    forms:[{label:"I run",ar:"أَرْكُضُ",translit:"arkudu",en:"I run"},{label:"He runs",ar:"يَرْكُضُ",translit:"yarkudu",en:"he runs"},{label:"I ran",ar:"رَكَضْتُ",translit:"rakadtu",en:"I ran"},{label:"Running",ar:"رَكْض",translit:"rakd",en:"running"},]
+  },
+  "نسبح": {
+    root:['س','ب','ح'], rootMeaning:"swim / glorify God",
+    tense:"present (we)", person:"we", prefix:"نَ", suffix:"", coreAr:"سبح", pattern:"نَفْعَل",
+    explain:"Root: س-ب-ح (swim/glorify). Present for <em>we</em>: prefix نَ + سبح = <strong>نَسْبَحُ</strong> (we swim). The same root gives سُبْحَانَ اللهِ (Glory be to God). Remember the prefix guide: أَ=I, يَ=he, تَ=she/you, نَ=we. Swap just that first letter.",
+    forms:[{label:"We swim",ar:"نَسْبَحُ",translit:"nasbahu",en:"we swim"},{label:"I swim",ar:"أَسْبَحُ",translit:"asbaHu",en:"I swim"},{label:"He swims",ar:"يَسْبَحُ",translit:"yasbaHu",en:"he swims"},{label:"We swam",ar:"سَبَحْنَا",translit:"sabahna",en:"we swam"},]
+  },
+  "أتذكر": {
+    root:['ذ','ك','ر'], rootMeaning:"remember / mention",
+    tense:"present (I)", person:"I", prefix:"أَتَ", suffix:"", coreAr:"ذكر", pattern:"أَتَفَعَّل (Form V)",
+    explain:"Root: ذ-ك-ر (remember/mention). Form V: تَذَكَّرَ (to remember — reflexive). Present for I: <strong>أَتَذَكَّرُ</strong>. ذِكْرَى (memory), ذِكْر (remembrance/mention). Form V is the reflexive of Form II — where Form II does something to others, Form V turns it back on oneself.",
+    forms:[{label:"I remember",ar:"أَتَذَكَّرُ",translit:"atadhakkaru",en:"I remember"},{label:"He remembers",ar:"يَتَذَكَّرُ",translit:"yatadhakkaru",en:"he remembers"},{label:"I remembered",ar:"تَذَكَّرْتُ",translit:"tadhakkart",en:"I remembered"},{label:"Memory",ar:"ذِكْرَى",translit:"dhikra",en:"memory"},]
+  },
+  "تعلمت": {
+    root:['ع','ل','م'], rootMeaning:"know / learn",
+    tense:"past (I)", person:"I", prefix:"تَ", suffix:"تُ", coreAr:"علم", pattern:"تَفَعَّلْتُ (Form V)",
+    explain:"Root: ع-ل-م (know). Form V: تَعَلَّمَ (to learn — 'to cause oneself to know'). Past for I: تَعَلَّمَ + تُ = <strong>تَعَلَّمْتُ</strong> (I learned). Both the Form V prefix تَ and the past suffix تُ appear together. مُعَلِّم (teacher — Form II active participle) and مَدْرَسَة (school) all trace back to the same ع-ل-م root.",
+    forms:[{label:"I learned",ar:"تَعَلَّمْتُ",translit:"ta'allamtu",en:"I learned"},{label:"He learned",ar:"تَعَلَّمَ",translit:"ta'allama",en:"he learned"},{label:"I learn",ar:"أَتَعَلَّمُ",translit:"ata'allamu",en:"I learn"},{label:"Teacher",ar:"مُعَلِّم",translit:"mu'allim",en:"teacher"},]
+  },
+  "وصلنا": {
+    root:['و','ص','ل'], rootMeaning:"arrive / reach / connect",
+    tense:"past (we)", person:"we", prefix:"", suffix:"نَا", coreAr:"وصل", pattern:"فَعَلْنَا",
+    explain:"Root: و-ص-ل (arrive/connect). Regular past for <em>we</em>: وَصَلَ + نَا = <strong>وَصَلْنَا</strong> (we arrived). وَاصَلَ (continued), وَصْلَة (connection). The suffix rule: تُ = I, نَا = we — works for every regular verb without exception.",
+    forms:[{label:"We arrived",ar:"وَصَلْنَا",translit:"wasalna",en:"we arrived"},{label:"I arrived",ar:"وَصَلْتُ",translit:"wasaltu",en:"I arrived"},{label:"He arrived",ar:"وَصَلَ",translit:"wasala",en:"he arrived"},{label:"I arrive",ar:"أَصِلُ",translit:"asilu",en:"I arrive"},]
+  },
+  "نمنا": {
+    root:['ن','و','م'], rootMeaning:"sleep",
+    tense:"past (we)", person:"we", prefix:"", suffix:"نَا", coreAr:"نم", pattern:"فِلْنَا (hollow + we)",
+    explain:"Root: ن-و-م (sleep). Hollow verb — the و disappears in past tense. نَامَ + نَا → contracts to <strong>نِمْنَا</strong> (we slept). نَوْم (sleep — the noun), نَائِم (sleeping/asleep). Hollow verb + we suffix: short vowel + نَا. Compare: نِمْتُ (I slept), نِمْنَا (we slept).",
+    forms:[{label:"We slept",ar:"نِمْنَا",translit:"nimna",en:"we slept"},{label:"I slept",ar:"نِمْتُ",translit:"nimtu",en:"I slept"},{label:"He slept",ar:"نَامَ",translit:"nama",en:"he slept"},{label:"I sleep",ar:"أَنَامُ",translit:"anamu",en:"I sleep"},]
+  },
+  "لعبنا": {
+    root:['ل','ع','ب'], rootMeaning:"play",
+    tense:"past (we)", person:"we", prefix:"", suffix:"نَا", coreAr:"لعب", pattern:"فَعِلْنَا",
+    explain:"Root: ل-ع-ب (play). Middle kasra: لَعِبَ. Past for we: لَعِبَ + نَا = <strong>لَعِبْنَا</strong> (we played). لُعْبَة (game/toy), لَاعِب (player) share the root. يَلْعَبُ (he plays), نَلْعَبُ (we play) in present.",
+    forms:[{label:"We played",ar:"لَعِبْنَا",translit:"la'ibna",en:"we played"},{label:"I played",ar:"لَعِبْتُ",translit:"la'ibtu",en:"I played"},{label:"He played",ar:"لَعِبَ",translit:"la'iba",en:"he played"},{label:"Player",ar:"لَاعِب",translit:"la'ib",en:"player"},]
+  },
+  "تغيرت": {
+    root:['غ','ي','ر'], rootMeaning:"change / alter",
+    tense:"past (I)", person:"I", prefix:"تَ", suffix:"تُ", coreAr:"غير", pattern:"تَفَعَّلْتُ (Form V)",
+    explain:"Root: غ-ي-ر (other/change). Form V: تَغَيَّرَ (to change oneself). Past for I: <strong>تَغَيَّرْتُ</strong> (I changed). غَيَّرَ (Form II) = to change something else; تَغَيَّرَ (Form V) = to change oneself. غَيْر (other/different), تَغْيِير (change — noun). Both Form V prefix تَ and past suffix تُ are visible.",
+    forms:[{label:"I changed",ar:"تَغَيَّرْتُ",translit:"taghayyartu",en:"I changed"},{label:"It changed",ar:"تَغَيَّرَ",translit:"taghayyara",en:"it changed"},{label:"I change",ar:"أَتَغَيَّرُ",translit:"ataghayyaru",en:"I change"},{label:"Change",ar:"تَغْيِير",translit:"taghyir",en:"change (noun)"},]
+  },
+  "استمتعت": {
+    root:['م','ت','ع'], rootMeaning:"enjoy / take pleasure",
+    tense:"past (I)", person:"I", prefix:"اِسْتَ", suffix:"تُ", coreAr:"متع", pattern:"اِسْتَفْعَلْتُ (Form X)",
+    explain:"Root: م-ت-ع (enjoyment). Form X — prefix اِسْتَ means 'seeking'. اِسْتَمْتَعَ = 'to enjoy' (seek pleasure). Past for I: + تُ = <strong>اِسْتَمْتَعْتُ</strong> (I enjoyed). Both Form X prefix اِسْتَ and past suffix تُ appear together. مُتْعَة (pleasure), مَتَاع (goods). Form X is elegant and commonly used in written Arabic.",
+    forms:[{label:"I enjoyed",ar:"اِسْتَمْتَعْتُ",translit:"istamta'tu",en:"I enjoyed"},{label:"He enjoyed",ar:"اِسْتَمْتَعَ",translit:"istamta'a",en:"he enjoyed"},{label:"I enjoy",ar:"أَسْتَمْتِعُ",translit:"astamti'u",en:"I enjoy"},{label:"Enjoyment",ar:"مُتْعَة",translit:"mut'a",en:"enjoyment"},]
+  }
+
+};
+
+/* ════════════════════════════════════════════════
+   STORY DATA
+════════════════════════════════════════════════ */
+const STORIES = [
+  { id:1, level:1, levelName:"Level 1 · Greetings", titleEn:"Hello!", titleAr:"مرحبا!",
+    sentences:[
+      {ar:["مرحبا",".","أنا","سارة","."], translit:"Marhaban. Ana Sara.", en:"Hello. I am Sara."},
+      {ar:["كيف","حالك","؟"], translit:"Kayfa haluk?", en:"How are you?"},
+      {ar:["أنا","بخير","،","شكراً","."], translit:"Ana bikhair, shukran.", en:"I am well, thank you."},
+      {ar:["مع","السلامة","!"], translit:"Ma'a as-salama!", en:"Goodbye!"}
+    ],
+    vocab:[
+      {ar:"مرحبا",translit:"marhaban",en:"hello"},
+      {ar:"أنا",translit:"ana",en:"I / I am"},
+      {ar:"كيف",translit:"kayfa",en:"how"},
+      {ar:"حالك",translit:"haluk",en:"your condition"},
+      {ar:"بخير",translit:"bikhair",en:"fine / well"},
+      {ar:"شكراً",translit:"shukran",en:"thank you"},
+      {ar:"مع السلامة",translit:"ma'a as-salama",en:"goodbye"}
+    ]
+  },
+  { id:2, level:1, levelName:"Level 1 · Family", titleEn:"My Family", titleAr:"عائلتي",
+    sentences:[
+      {ar:["هذه","عائلتي","."], translit:"Hadhihi 'a'ilati.", en:"This is my family."},
+      {ar:["أمي","اسمها","ليلى","."], translit:"Ummi ismuha Layla.", en:"My mother's name is Layla."},
+      {ar:["أبي","طبيب","."], translit:"Abi tabib.", en:"My father is a doctor."},
+      {ar:["لدي","أخ","وأخت","."], translit:"Ladayya akh wa ukht.", en:"I have a brother and a sister."},
+      {ar:["أحب","عائلتي","كثيراً","."], translit:"Uhibbu 'a'ilati kathiran.", en:"I love my family very much."}
+    ],
+    vocab:[
+      {ar:"عائلة",translit:"'a'ila",en:"family"},
+      {ar:"أمي",translit:"ummi",en:"my mother"},
+      {ar:"أبي",translit:"abi",en:"my father"},
+      {ar:"أخ",translit:"akh",en:"brother"},
+      {ar:"أخت",translit:"ukht",en:"sister"},
+      {ar:"أحب",translit:"uhibbu",en:"I love"},
+      {ar:"كثيراً",translit:"kathiran",en:"very much"},
+      {ar:"هذه",translit:"hadhihi",en:"this (feminine)"},
+      {ar:"لدي",translit:"ladayya",en:"I have"}
+    ]
+  },
+  { id:3, level:2, levelName:"Level 2 · Daily Life", titleEn:"Morning Routine", titleAr:"الصباح",
+    sentences:[
+      {ar:["أستيقظ","في","الصباح","."], translit:"Astayqizu fi as-sabah.", en:"I wake up in the morning."},
+      {ar:["آكل","الإفطار","مع","أسرتي","."], translit:"Akulu al-iftar ma'a usrati.", en:"I eat breakfast with my family."},
+      {ar:["أشرب","الشاي","كل","يوم","."], translit:"Ashrabu ash-shay kulla yawm.", en:"I drink tea every day."},
+      {ar:["بعد","ذلك","أذهب","إلى","العمل","."], translit:"Ba'da dhalika adhabu ila al-'amal.", en:"After that I go to work."},
+      {ar:["أحب","الصباح","!"], translit:"Uhibbu as-sabah!", en:"I love mornings!"}
+    ],
+    vocab:[
+      {ar:"أستيقظ",translit:"astayqizu",en:"I wake up"},
+      {ar:"الصباح",translit:"as-sabah",en:"the morning"},
+      {ar:"آكل",translit:"akulu",en:"I eat"},
+      {ar:"الإفطار",translit:"al-iftar",en:"breakfast"},
+      {ar:"أشرب",translit:"ashrabu",en:"I drink"},
+      {ar:"الشاي",translit:"ash-shay",en:"the tea"},
+      {ar:"كل يوم",translit:"kulla yawm",en:"every day"},
+      {ar:"أذهب",translit:"adhabu",en:"I go"},
+      {ar:"العمل",translit:"al-'amal",en:"work"},
+      {ar:"بعد ذلك",translit:"ba'da dhalika",en:"after that"}
+    ]
+  },
+  { id:4, level:2, levelName:"Level 2 · Food", titleEn:"At the Market", titleAr:"في السوق",
+    sentences:[
+      {ar:["ذهبت","إلى","السوق","اليوم","."], translit:"Dhahabtu ila as-suq al-yawm.", en:"I went to the market today."},
+      {ar:["اشتريت","خبزاً","وخضروات","وفاكهة","."], translit:"Ishtaraytu khubzan wa khudrawat wa fakiha.", en:"I bought bread, vegetables and fruit."},
+      {ar:["السوق","كبير","وجميل","."], translit:"As-suq kabir wa jamil.", en:"The market is big and beautiful."},
+      {ar:["الناس","هناك","كثيرون","وودودون","."], translit:"An-nas hunaka kathirun wa wadudun.", en:"The people there are many and friendly."},
+      {ar:["أحب","التسوق","في","الصباح","."], translit:"Uhibbu at-tasawwuq fi as-sabah.", en:"I love shopping in the morning."}
+    ],
+    vocab:[
+      {ar:"السوق",translit:"as-suq",en:"the market"},
+      {ar:"اشتريت",translit:"ishtaraytu",en:"I bought"},
+      {ar:"خبز",translit:"khubz",en:"bread"},
+      {ar:"خضروات",translit:"khudrawat",en:"vegetables"},
+      {ar:"فاكهة",translit:"fakiha",en:"fruit"},
+      {ar:"كبير",translit:"kabir",en:"big / large"},
+      {ar:"جميل",translit:"jamil",en:"beautiful"},
+      {ar:"الناس",translit:"an-nas",en:"the people"},
+      {ar:"هناك",translit:"hunaka",en:"there"},
+      {ar:"ودودون",translit:"wadudun",en:"friendly"}
+    ]
+  },
+  { id:5, level:3, levelName:"Level 3 · Travel", titleEn:"A Trip to Cairo", titleAr:"رحلة إلى القاهرة",
+    sentences:[
+      {ar:["سافرت","إلى","القاهرة","الشهر","الماضي","."], translit:"Safart ila al-Qahira ash-shahr al-madi.", en:"I travelled to Cairo last month."},
+      {ar:["القاهرة","مدينة","عريقة","وتاريخية","."], translit:"Al-Qahira madina 'ariqa wa tarikhiyya.", en:"Cairo is an ancient and historical city."},
+      {ar:["زرت","الأهرامات","ونهر","النيل","."], translit:"Zurtu al-ahramat wa nahr an-Nil.", en:"I visited the pyramids and the River Nile."},
+      {ar:["الطعام","المصري","لذيذ","جداً","."], translit:"At-ta'am al-misri ladhidh jiddan.", en:"Egyptian food is very delicious."},
+      {ar:["أريد","أن","أعود","مرة","أخرى","."], translit:"Urid an a'uda marra ukhra.", en:"I want to return again."}
+    ],
+    vocab:[
+      {ar:"سافرت",translit:"safart",en:"I travelled"},
+      {ar:"القاهرة",translit:"al-Qahira",en:"Cairo"},
+      {ar:"مدينة",translit:"madina",en:"city"},
+      {ar:"عريقة",translit:"'ariqa",en:"ancient"},
+      {ar:"زرت",translit:"zurtu",en:"I visited"},
+      {ar:"الأهرامات",translit:"al-ahramat",en:"the pyramids"},
+      {ar:"الطعام",translit:"at-ta'am",en:"the food"},
+      {ar:"لذيذ",translit:"ladhidh",en:"delicious"},
+      {ar:"جداً",translit:"jiddan",en:"very"},
+      {ar:"أريد",translit:"urid",en:"I want"},
+      {ar:"أعود",translit:"a'uda",en:"to return"}
+    ]
+  },
+  { id:6, level:3, levelName:"Level 3 · Feelings", titleEn:"A Beautiful Day", titleAr:"يوم جميل",
+    sentences:[
+      {ar:["اليوم","الطقس","رائع","وجميل","."], translit:"Al-yawm at-taqs ra'i' wa jamil.", en:"Today the weather is wonderful and beautiful."},
+      {ar:["الشمس","مشرقة","والهواء","نظيف","."], translit:"Ash-shams mushriqah wal-hawa' nazif.", en:"The sun is shining and the air is clean."},
+      {ar:["أشعر","بالسعادة","والراحة","."], translit:"Ash'ur bis-sa'ada war-raha.", en:"I feel happy and at ease."},
+      {ar:["في","مثل","هذه","الأيام","أحب","المشي","."], translit:"Fi mithli hadhihi al-ayyam uhibbu al-mashy.", en:"On days like these I love to walk."},
+      {ar:["الحياة","جميلة","عندما","نشكر","ما","لدينا","."], translit:"Al-hayat jamila 'indama nashkuru ma ladayna.", en:"Life is beautiful when we are grateful for what we have."}
+    ],
+    vocab:[
+      {ar:"الطقس",translit:"at-taqs",en:"the weather"},
+      {ar:"رائع",translit:"ra'i'",en:"wonderful"},
+      {ar:"الشمس",translit:"ash-shams",en:"the sun"},
+      {ar:"مشرقة",translit:"mushriqah",en:"shining / radiant"},
+      {ar:"الهواء",translit:"al-hawa'",en:"the air"},
+      {ar:"نظيف",translit:"nazif",en:"clean"},
+      {ar:"أشعر",translit:"ash'ur",en:"I feel"},
+      {ar:"السعادة",translit:"as-sa'ada",en:"happiness"},
+      {ar:"الحياة",translit:"al-hayat",en:"life"},
+      {ar:"نشكر",translit:"nashkuru",en:"we are grateful"}
+    ]
+  },
+  { id:7, level:4, levelName:"Level 4 · Tenses", titleEn:"Yesterday and Today", titleAr:"أمس واليوم",
+    sentences:[
+      {ar:["أمس","ذهبت","إلى","المكتبة","وقرأت","كتاباً","جميلاً","."], translit:"Ams dhahabtu ila al-maktaba wa qara'tu kitaban jamilan.", en:"Yesterday I went to the library and read a beautiful book."},
+      {ar:["اليوم","أذهب","إلى","المكتبة","أيضاً","وأقرأ","كتاباً","آخر","."], translit:"Al-yawm adhabu ila al-maktaba aydan wa aqra'u kitaban akhar.", en:"Today I go to the library also and read another book."},
+      {ar:["أمس","كتبت","رسالة","إلى","صديقي","في","لندن","."], translit:"Ams katabtu risala ila sadiqi fi Landan.", en:"Yesterday I wrote a letter to my friend in London."},
+      {ar:["اليوم","أكتب","في","مذكرتي","كل","ما","حدث","."], translit:"Al-yawm aktubu fi mudhakkarati kull ma hadath.", en:"Today I write in my diary everything that happened."},
+      {ar:["الأمس","انتهى","لكن","اليوم","يبدأ","من","جديد","."], translit:"Al-ams intaha lakin al-yawm yabda' min jadid.", en:"Yesterday has ended but today begins afresh."}
+    ],
+    vocab:[
+      {ar:"أمس",translit:"ams",en:"yesterday"},
+      {ar:"اليوم",translit:"al-yawm",en:"today"},
+      {ar:"المكتبة",translit:"al-maktaba",en:"the library"},
+      {ar:"قرأت",translit:"qara'tu",en:"I read (past)"},
+      {ar:"أقرأ",translit:"aqra'u",en:"I read (present)"},
+      {ar:"كتبت",translit:"katabtu",en:"I wrote"},
+      {ar:"أكتب",translit:"aktubu",en:"I write"},
+      {ar:"رسالة",translit:"risala",en:"letter / message"},
+      {ar:"مذكرة",translit:"mudhakkara",en:"diary / notebook"},
+      {ar:"انتهى",translit:"intaha",en:"ended / finished"},
+      {ar:"يبدأ",translit:"yabda'",en:"begins / starts"}
+    ]
+  },
+  { id:8, level:4, levelName:"Level 4 · Home", titleEn:"My Day at Home", titleAr:"يومي في البيت",
+    sentences:[
+      {ar:["استيقظت","في","الصباح","الباكر","وشربت","قهوتي","."], translit:"Istayqaztu fi as-sabah al-bakir wa sharibtu qahwati.", en:"I woke up early in the morning and drank my coffee."},
+      {ar:["بعد","ذلك","نظفت","البيت","وغسلت","الملابس","."], translit:"Ba'da dhalika nazzaftu al-bayt wa ghasaltu al-malabis.", en:"After that I cleaned the house and washed the clothes."},
+      {ar:["الآن","أطبخ","الغداء","وأستمع","إلى","الموسيقى","."], translit:"Al-an atbukhu al-ghada' wa astami'u ila al-musiqa.", en:"Now I am cooking lunch and listening to music."},
+      {ar:["في","المساء","سأقرأ","كتابي","وأشاهد","التلفاز","."], translit:"Fi al-masa' sa-aqra'u kitabi wa ushahidu at-tilfaz.", en:"In the evening I will read my book and watch television."},
+      {ar:["البيت","هادئ","وأنا","مرتاح","جداً","."], translit:"Al-bayt hadi' wa ana murtah jiddan.", en:"The house is quiet and I am very comfortable."}
+    ],
+    vocab:[
+      {ar:"استيقظت",translit:"istayqaztu",en:"I woke up (past)"},
+      {ar:"شربت",translit:"sharibtu",en:"I drank (past)"},
+      {ar:"قهوة",translit:"qahwa",en:"coffee"},
+      {ar:"نظفت",translit:"nazzaftu",en:"I cleaned (past)"},
+      {ar:"غسلت",translit:"ghasaltu",en:"I washed (past)"},
+      {ar:"الملابس",translit:"al-malabis",en:"the clothes"},
+      {ar:"أطبخ",translit:"atbukhu",en:"I cook (present)"},
+      {ar:"الغداء",translit:"al-ghada'",en:"lunch"},
+      {ar:"أستمع",translit:"astami'u",en:"I listen (present)"},
+      {ar:"الموسيقى",translit:"al-musiqa",en:"music"},
+      {ar:"هادئ",translit:"hadi'",en:"quiet / calm"}
+    ]
+  },
+  { id:9, level:4, levelName:"Level 4 · Friends", titleEn:"Meeting a Friend", titleAr:"لقاء صديق",
+    sentences:[
+      {ar:["التقيت","بصديقي","أحمد","في","المقهى","أمس","بعد","الظهر","."], translit:"Iltaqaytu bi-sadiqi Ahmad fi al-maqha ams ba'd az-zuhr.", en:"I met my friend Ahmad at the café yesterday afternoon."},
+      {ar:["جلسنا","معاً","وتحدثنا","عن","أحوالنا","وعن","عملنا","."], translit:"Jalasna ma'an wa tahadathna 'an ahwalina wa 'an 'amalina.", en:"We sat together and talked about how we were and about our work."},
+      {ar:["طلبت","قهوة","وطلب","هو","عصير","برتقال","."], translit:"Talabtu qahwa wa talaba huwa 'asir burtuqal.", en:"I ordered coffee and he ordered orange juice."},
+      {ar:["الآن","نلتقي","كل","أسبوع","ونتحدث","كثيراً","."], translit:"Al-an naltaqi kull usbu' wa natahaddath kathiran.", en:"Now we meet every week and talk a lot."},
+      {ar:["الصداقة","الحقيقية","كنز","لا","يقدر","بثمن","."], translit:"As-sadaqa al-haqiqiyya kanz la yuqaddar bi-thaman.", en:"True friendship is a treasure beyond price."}
+    ],
+    vocab:[
+      {ar:"التقيت",translit:"iltaqaytu",en:"I met (past)"},
+      {ar:"المقهى",translit:"al-maqha",en:"the café"},
+      {ar:"جلسنا",translit:"jalasna",en:"we sat (past)"},
+      {ar:"تحدثنا",translit:"tahadathna",en:"we talked (past)"},
+      {ar:"طلبت",translit:"talabtu",en:"I ordered (past)"},
+      {ar:"عصير",translit:"'asir",en:"juice"},
+      {ar:"نلتقي",translit:"naltaqi",en:"we meet (present)"},
+      {ar:"نتحدث",translit:"natahaddath",en:"we talk (present)"},
+      {ar:"كل أسبوع",translit:"kull usbu'",en:"every week"},
+      {ar:"الصداقة",translit:"as-sadaqa",en:"friendship"},
+      {ar:"كنز",translit:"kanz",en:"treasure"}
+    ]
+  },
+  { id:10, level:4, levelName:"Level 4 · Nature", titleEn:"A Walk in the Park", titleAr:"نزهة في الحديقة",
+    sentences:[
+      {ar:["مشيت","في","الحديقة","العامة","هذا","الصباح","ساعة","كاملة","."], translit:"Mashaytu fi al-hadiqa al-'amma hadha as-sabah sa'a kamila.", en:"I walked in the public park this morning for a full hour."},
+      {ar:["رأيت","الأشجار","الخضراء","والأزهار","الملونة","في","كل","مكان","."], translit:"Ra'aytu al-ashjar al-khadra' wal-azhar al-mulawwana fi kull makan.", en:"I saw green trees and colourful flowers everywhere."},
+      {ar:["سمعت","أصوات","الطيور","وشعرت","بنسيم","خفيف","على","وجهي","."], translit:"Sami'tu aswat at-tuyur wa sha'artu bi-nasim khafif 'ala wajhi.", en:"I heard the sounds of birds and felt a light breeze on my face."},
+      {ar:["أجلس","الآن","على","مقعد","وأشرب","الماء","وأستريح","."], translit:"Ajlisu al-an 'ala maq'ad wa ashrabu al-ma' wa astarihu.", en:"I am sitting now on a bench and drinking water and resting."},
+      {ar:["الطبيعة","تعطيني","طاقة","وسعادة","لا","أجدهما","في","مكان","آخر","."], translit:"At-tabi'a tu'tini taqa wa sa'ada la ajiduhuma fi makan akhar.", en:"Nature gives me energy and happiness that I find nowhere else."}
+    ],
+    vocab:[
+      {ar:"مشيت",translit:"mashaytu",en:"I walked (past)"},
+      {ar:"الحديقة",translit:"al-hadiqa",en:"the garden / park"},
+      {ar:"رأيت",translit:"ra'aytu",en:"I saw (past)"},
+      {ar:"الأشجار",translit:"al-ashjar",en:"the trees"},
+      {ar:"الأزهار",translit:"al-azhar",en:"the flowers"},
+      {ar:"سمعت",translit:"sami'tu",en:"I heard (past)"},
+      {ar:"الطيور",translit:"at-tuyur",en:"the birds"},
+      {ar:"نسيم",translit:"nasim",en:"breeze"},
+      {ar:"أجلس",translit:"ajlisu",en:"I sit (present)"},
+      {ar:"أستريح",translit:"astarihu",en:"I rest (present)"},
+      {ar:"الطبيعة",translit:"at-tabi'a",en:"nature"}
+    ]
+  },
+  { id:11, level:4, levelName:"Level 4 · School", titleEn:"Learning Arabic", titleAr:"تعلُّم العربية",
+    sentences:[
+      {ar:["بدأت","تعلم","اللغة","العربية","منذ","ستة","أشهر","."], translit:"Bada'tu ta'allum al-lugha al-'arabiyya mundhu sitta ashhur.", en:"I started learning Arabic six months ago."},
+      {ar:["في","البداية","كانت","الحروف","صعبة","لكنني","تعودت","عليها","."], translit:"Fi al-bidaya kanat al-huruf sa'ba lakinnani ta'awwadtu 'alayha.", en:"In the beginning the letters were difficult but I got used to them."},
+      {ar:["أدرس","كل","يوم","وأكتب","الكلمات","الجديدة","في","دفتر","."], translit:"Adrusu kull yawm wa aktubu al-kalimat al-jadida fi daftar.", en:"I study every day and write new words in a notebook."},
+      {ar:["قرأت","اليوم","قصة","قصيرة","بالعربية","وفهمت","معظمها","."], translit:"Qara'tu al-yawm qissa qasira bil-'arabiyya wa fahimtu mu'zamaha.", en:"Today I read a short story in Arabic and understood most of it."},
+      {ar:["أعلم","أن","الطريق","طويل","لكن","كل","يوم","أتقدم","قليلاً","."], translit:"A'lam anna at-tariq tawil lakin kull yawm ataqaddam qalilan.", en:"I know the road is long but every day I progress a little."}
+    ],
+    vocab:[
+      {ar:"بدأت",translit:"bada'tu",en:"I started (past)"},
+      {ar:"اللغة",translit:"al-lugha",en:"the language"},
+      {ar:"الحروف",translit:"al-huruf",en:"the letters"},
+      {ar:"تعودت",translit:"ta'awwadtu",en:"I got used to (past)"},
+      {ar:"أدرس",translit:"adrusu",en:"I study (present)"},
+      {ar:"أكتب",translit:"aktubu",en:"I write (present)"},
+      {ar:"قرأت",translit:"qara'tu",en:"I read (past)"},
+      {ar:"فهمت",translit:"fahimtu",en:"I understood (past)"},
+      {ar:"أعلم",translit:"a'lam",en:"I know (present)"},
+      {ar:"أتقدم",translit:"ataqaddam",en:"I progress (present)"},
+      {ar:"قليلاً",translit:"qalilan",en:"a little / slightly"}
+    ]
+  },
+  { id:12, level:4, levelName:"Level 4 · Food", titleEn:"Cooking Together", titleAr:"الطبخ معاً",
+    sentences:[
+      {ar:["أمس","طبخت","مع","أمي","طعاماً","لذيذاً","للعشاء","."], translit:"Ams tabakhtu ma'a ummi ta'aman ladhidhan lil-'asha'.", en:"Yesterday I cooked delicious food with my mother for dinner."},
+      {ar:["اشترينا","الخضروات","الطازجة","من","السوق","في","الصباح","."], translit:"Ishtarayna al-khudrawat at-tazija min as-suq fi as-sabah.", en:"We bought fresh vegetables from the market in the morning."},
+      {ar:["قطعت","البصل","والطماطم","وأضافت","أمي","البهارات","."], translit:"Qatta'tu al-basal wat-tamata wa adafat ummi al-baharaat.", en:"I chopped the onions and tomatoes and my mother added the spices."},
+      {ar:["الآن","أتعلم","كيف","أطبخ","وأستمتع","بذلك","كثيراً","."], translit:"Al-an at'allamu kayfa atbukhu wa astamti'u bi-dhalika kathiran.", en:"Now I am learning how to cook and I enjoy it very much."},
+      {ar:["الطبخ","فن","جميل","يجمع","الناس","على","مائدة","واحدة","."], translit:"At-tabkh fann jamil yajma' an-nas 'ala ma'ida wahida.", en:"Cooking is a beautiful art that brings people together at one table."}
+    ],
+    vocab:[
+      {ar:"طبخت",translit:"tabakhtu",en:"I cooked (past)"},
+      {ar:"اشترينا",translit:"ishtarayna",en:"we bought (past)"},
+      {ar:"طازج",translit:"tazij",en:"fresh"},
+      {ar:"قطعت",translit:"qatta'tu",en:"I chopped (past)"},
+      {ar:"البصل",translit:"al-basal",en:"onion"},
+      {ar:"الطماطم",translit:"at-tamata",en:"tomatoes"},
+      {ar:"البهارات",translit:"al-baharaat",en:"spices"},
+      {ar:"أتعلم",translit:"at'allamu",en:"I learn (present)"},
+      {ar:"أطبخ",translit:"atbukhu",en:"I cook (present)"},
+      {ar:"أستمتع",translit:"astamti'u",en:"I enjoy (present)"},
+      {ar:"مائدة",translit:"ma'ida",en:"table / dining table"}
+    ]
+  },
+
+  // ══ MORE LEVEL 4 STORIES ══
+
+  { id:13, level:4, levelName:"Level 4 · Health", titleEn:"At the Doctor", titleAr:"عند الطبيب",
+    sentences:[
+      {ar:["مرضت","الأسبوع","الماضي","وذهبت","إلى","الطبيب","."], translit:"Maridtu al-usbu' al-madi wa dhahabtu ila at-tabib.", en:"I was ill last week and went to the doctor."},
+      {ar:["سألني","الطبيب","كيف","أشعر","ومنذ","متى","أنا","مريض","."], translit:"Sa'alani at-tabib kayfa ash'ur wa mundhu mata ana marid.", en:"The doctor asked me how I feel and how long I have been ill."},
+      {ar:["أخبرته","أن","رأسي","يؤلمني","وأنني","لا","أستطيع","النوم","."], translit:"Akhbartuhu anna ra'si yu'limuni wa annani la astati' an-nawm.", en:"I told him that my head was hurting me and that I could not sleep."},
+      {ar:["كتب","لي","وصفة","طبية","وقال","لي","استرح","في","البيت","."], translit:"Kataba li wasfa tibbiyya wa qala li istarih fi al-bayt.", en:"He wrote me a prescription and told me to rest at home."},
+      {ar:["بعد","ثلاثة","أيام","تحسنت","صحتي","وشعرت","بتحسن","كبير","."], translit:"Ba'da thalathati ayyam tahassanat sihati wa sha'artu bi-tahassun kabir.", en:"After three days my health improved and I felt much better."}
+    ],
+    vocab:[
+      {ar:"مرضت",translit:"maridtu",en:"I was ill (past)"},
+      {ar:"الطبيب",translit:"at-tabib",en:"the doctor"},
+      {ar:"سألني",translit:"sa'alani",en:"he asked me"},
+      {ar:"أشعر",translit:"ash'ur",en:"I feel (present)"},
+      {ar:"مريض",translit:"marid",en:"ill / sick"},
+      {ar:"أخبرته",translit:"akhbartuhu",en:"I told him (past)"},
+      {ar:"يؤلمني",translit:"yu'limuni",en:"hurts me"},
+      {ar:"النوم",translit:"an-nawm",en:"sleep"},
+      {ar:"وصفة طبية",translit:"wasfa tibbiyya",en:"prescription"},
+      {ar:"تحسنت",translit:"tahassanat",en:"improved (past)"},
+      {ar:"صحتي",translit:"sihati",en:"my health"}
+    ]
+  },
+
+  { id:14, level:4, levelName:"Level 4 · City", titleEn:"In the City", titleAr:"في المدينة",
+    sentences:[
+      {ar:["ركبت","الحافلة","إلى","وسط","المدينة","هذا","الصباح","."], translit:"Rakibtu al-hafila ila wasat al-madina hadha as-sabah.", en:"I took the bus to the city centre this morning."},
+      {ar:["نزلت","عند","المحطة","الرئيسية","ومشيت","في","الشوارع","."], translit:"Nazaltu 'ind al-mahatta ar-ra'isiyya wa mashaytu fi ash-shawari'.", en:"I got off at the main station and walked through the streets."},
+      {ar:["دخلت","متجراً","كبيراً","ونظرت","إلى","البضائع","المعروضة","."], translit:"Dakhaltu matjaran kabiran wa nazartu ila al-bada'i' al-ma'ruda.", en:"I entered a large shop and looked at the goods on display."},
+      {ar:["اشتريت","هدية","لأمي","ثم","عدت","إلى","البيت","بالحافلة","."], translit:"Ishtaraytu hadiyya li-ummi thumma 'udtu ila al-bayt bil-hafila.", en:"I bought a gift for my mother then returned home by bus."},
+      {ar:["أحب","المدينة","لكنني","أفضل","الهدوء","في","المساء","."], translit:"Uhibbu al-madina lakinnani ufaddil al-hudu' fi al-masa'.", en:"I love the city but I prefer the quiet in the evening."}
+    ],
+    vocab:[
+      {ar:"ركبت",translit:"rakibtu",en:"I rode / took (past)"},
+      {ar:"الحافلة",translit:"al-hafila",en:"the bus"},
+      {ar:"وسط المدينة",translit:"wasat al-madina",en:"city centre"},
+      {ar:"نزلت",translit:"nazaltu",en:"I got off / descended (past)"},
+      {ar:"المحطة",translit:"al-mahatta",en:"the station"},
+      {ar:"مشيت",translit:"mashaytu",en:"I walked (past)"},
+      {ar:"دخلت",translit:"dakhaltu",en:"I entered (past)"},
+      {ar:"متجر",translit:"matjar",en:"shop / store"},
+      {ar:"هدية",translit:"hadiyya",en:"gift / present"},
+      {ar:"عدت",translit:"'udtu",en:"I returned (past)"},
+      {ar:"أفضل",translit:"ufaddil",en:"I prefer (present)"}
+    ]
+  },
+
+  { id:15, level:4, levelName:"Level 4 · Weekend", titleEn:"Last Weekend", titleAr:"عطلة نهاية الأسبوع",
+    sentences:[
+      {ar:["في","نهاية","الأسبوع","الماضي","زرت","أصدقائي","في","الريف","."], translit:"Fi nihayat al-usbu' al-madi zurtu asdiqai fi ar-rif.", en:"Last weekend I visited my friends in the countryside."},
+      {ar:["وصلنا","إلى","منزلهم","في","الظهر","وأكلنا","معاً","غداءً","شهياً","."], translit:"Wasalna ila manzilihim fi az-zuhr wa akalna ma'an ghada'an shahiyyan.", en:"We arrived at their house at noon and ate a delicious lunch together."},
+      {ar:["بعد","الغداء","لعبنا","كرة","القدم","في","الحديقة","."], translit:"Ba'da al-ghada' la'ibna kurat al-qadam fi al-hadiqa.", en:"After lunch we played football in the garden."},
+      {ar:["في","المساء","جلسنا","حول","النار","وتحدثنا","حتى","منتصف","الليل","."], translit:"Fi al-masa' jalasna hawla an-nar wa tahadathna hatta muntasaf al-layl.", en:"In the evening we sat around the fire and talked until midnight."},
+      {ar:["كانت","عطلة","رائعة","وأريد","أن","أكررها","قريباً","."], translit:"Kanat 'utla ra'i'a wa urid an ukarriraha qariban.", en:"It was a wonderful holiday and I want to repeat it soon."}
+    ],
+    vocab:[
+      {ar:"زرت",translit:"zurtu",en:"I visited (past)"},
+      {ar:"الريف",translit:"ar-rif",en:"the countryside"},
+      {ar:"وصلنا",translit:"wasalna",en:"we arrived (past)"},
+      {ar:"أكلنا",translit:"akalna",en:"we ate (past)"},
+      {ar:"لعبنا",translit:"la'ibna",en:"we played (past)"},
+      {ar:"كرة القدم",translit:"kurat al-qadam",en:"football"},
+      {ar:"جلسنا",translit:"jalasna",en:"we sat (past)"},
+      {ar:"تحدثنا",translit:"tahadathna",en:"we talked (past)"},
+      {ar:"حتى",translit:"hatta",en:"until"},
+      {ar:"منتصف الليل",translit:"muntasaf al-layl",en:"midnight"},
+      {ar:"أكررها",translit:"ukarriraha",en:"I repeat it (present)"}
+    ]
+  },
+
+  // ══ LEVEL 5 STORIES ══
+
+  { id:16, level:5, levelName:"Level 5 · Work", titleEn:"A New Job", titleAr:"وظيفة جديدة",
+    sentences:[
+      {ar:["حصلت","على","وظيفة","جديدة","في","شركة","كبيرة","الشهر","الماضي","."], translit:"Hasaltu 'ala wazifa jadida fi sharika kabira ash-shahr al-madi.", en:"I got a new job at a large company last month."},
+      {ar:["في","الأيام","الأولى","كنت","خائفاً","قليلاً","لأن","كل","شيء","كان","جديداً","."], translit:"Fi al-ayyam al-ula kuntu kha'ifan qalilan li-anna kull shay' kana jadidan.", en:"In the first days I was a little afraid because everything was new."},
+      {ar:["لكن","زملائي","في","العمل","ساعدوني","كثيراً","وشرحوا","لي","كل","شيء","."], translit:"Lakin zumala'i fi al-'amal sa'aduni kathiran wa sharaHu li kull shay'.", en:"But my colleagues at work helped me a lot and explained everything to me."},
+      {ar:["الآن","أفهم","عملي","جيداً","وأشعر","بالثقة","في","نفسي","."], translit:"Al-an afhamu 'amali jayidan wa ash'uru bil-thiqa fi nafsi.", en:"Now I understand my work well and feel confident in myself."},
+      {ar:["أتعلم","كل","يوم","شيئاً","جديداً","وهذا","يجعلني","سعيداً","."], translit:"Ata'allamu kull yawm shay'an jadidan wa hadha yaj'aluni sa'idan.", en:"I learn something new every day and this makes me happy."}
+    ],
+    vocab:[
+      {ar:"حصلت",translit:"hasaltu",en:"I got / obtained (past)"},
+      {ar:"وظيفة",translit:"wazifa",en:"job / position"},
+      {ar:"شركة",translit:"sharika",en:"company"},
+      {ar:"كنت خائفاً",translit:"kuntu kha'ifan",en:"I was afraid (past)"},
+      {ar:"ساعدوني",translit:"sa'aduni",en:"they helped me (past)"},
+      {ar:"شرحوا",translit:"sharaHu",en:"they explained (past)"},
+      {ar:"أفهم",translit:"afhamu",en:"I understand (present)"},
+      {ar:"الثقة",translit:"ath-thiqa",en:"confidence / trust"},
+      {ar:"أتعلم",translit:"ata'allamu",en:"I learn (present)"},
+      {ar:"يجعلني",translit:"yaj'aluni",en:"makes me"},
+      {ar:"سعيد",translit:"sa'id",en:"happy"}
+    ]
+  },
+
+  { id:17, level:5, levelName:"Level 5 · Memory", titleEn:"Childhood Memories", titleAr:"ذكريات الطفولة",
+    sentences:[
+      {ar:["عندما","كنت","صغيراً","كنت","أعيش","في","قرية","صغيرة","قرب","البحر","."], translit:"'Indama kuntu saghiran kuntu a'ishu fi qarya saghira qurb al-bahr.", en:"When I was young I used to live in a small village near the sea."},
+      {ar:["كنت","أستيقظ","كل","صباح","وأركض","إلى","الشاطئ","مع","أصدقائي","."], translit:"Kuntu astayqizu kull sabah wa arkudu ila ash-shati' ma'a asdiqai.", en:"I used to wake up every morning and run to the beach with my friends."},
+      {ar:["كنا","نسبح","في","البحر","ونلعب","على","الرمال","طوال","اليوم","."], translit:"Kunna nasbahu fi al-bahr wa nal'abu 'ala ar-rimal tawala al-yawm.", en:"We used to swim in the sea and play on the sand all day."},
+      {ar:["كانت","أمي","تنادينا","للعودة","عند","الغروب","لنأكل","العشاء","."], translit:"Kanat ummi tunadina lil-'awda 'ind al-ghurub li-na'kul al-'asha'.", en:"My mother used to call us back at sunset for us to eat dinner."},
+      {ar:["تلك","الأيام","كانت","أجمل","أيام","حياتي","ولا","أنساها","أبداً","."], translit:"Tilka al-ayyam kanat ajmal ayyam hayati wa la ansaha abadan.", en:"Those days were the most beautiful days of my life and I never forget them."}
+    ],
+    vocab:[
+      {ar:"كنت",translit:"kuntu",en:"I was / I used to"},
+      {ar:"كنا",translit:"kunna",en:"we were / we used to"},
+      {ar:"أعيش",translit:"a'ishu",en:"I live (present)"},
+      {ar:"قرية",translit:"qarya",en:"village"},
+      {ar:"البحر",translit:"al-bahr",en:"the sea"},
+      {ar:"أركض",translit:"arkudu",en:"I run (present)"},
+      {ar:"الشاطئ",translit:"ash-shati'",en:"the beach"},
+      {ar:"نسبح",translit:"nasbahu",en:"we swim (present)"},
+      {ar:"الرمال",translit:"ar-rimal",en:"the sand"},
+      {ar:"الغروب",translit:"al-ghurub",en:"sunset"},
+      {ar:"لا أنساها",translit:"la ansaha",en:"I never forget it"}
+    ]
+  },
+
+  { id:18, level:5, levelName:"Level 5 · Plans", titleEn:"Future Plans", titleAr:"خطط المستقبل",
+    sentences:[
+      {ar:["أفكر","كثيراً","في","المستقبل","وعندي","خطط","كثيرة","."], translit:"Ufakkiru kathiran fi al-mustaqbal wa 'indi khitat kathira.", en:"I think a lot about the future and I have many plans."},
+      {ar:["أريد","أن","أتعلم","لغات","جديدة","وأسافر","إلى","بلدان","كثيرة","."], translit:"Urid an ata'allama lughaat jadida wa usafira ila buldan kathira.", en:"I want to learn new languages and travel to many countries."},
+      {ar:["أحلم","بأن","أفتح","مشروعي","الخاص","يوماً","ما","."], translit:"Ahlumu bi-an aftaha mashru'i al-khass yawman ma.", en:"I dream of opening my own business one day."},
+      {ar:["لكنني","أعلم","أن","النجاح","يحتاج","إلى","عمل","وصبر","ووقت","."], translit:"Lakinnani a'lamu anna an-najah yahtaju ila 'amal wa sabr wa waqt.", en:"But I know that success needs work and patience and time."},
+      {ar:["في","الوقت","الحالي","أركز","على","تطوير","نفسي","كل","يوم","."], translit:"Fi al-waqt al-hali arakkizu 'ala tatwir nafsi kull yawm.", en:"At the present time I focus on developing myself every day."}
+    ],
+    vocab:[
+      {ar:"أفكر",translit:"ufakkiru",en:"I think (present)"},
+      {ar:"المستقبل",translit:"al-mustaqbal",en:"the future"},
+      {ar:"خطط",translit:"khitat",en:"plans"},
+      {ar:"أسافر",translit:"usafiru",en:"I travel (present)"},
+      {ar:"بلدان",translit:"buldan",en:"countries"},
+      {ar:"أحلم",translit:"ahlumu",en:"I dream (present)"},
+      {ar:"مشروع",translit:"mashru'",en:"project / business"},
+      {ar:"النجاح",translit:"an-najah",en:"success"},
+      {ar:"صبر",translit:"sabr",en:"patience"},
+      {ar:"أركز",translit:"arakkizu",en:"I focus (present)"},
+      {ar:"تطوير",translit:"tatwir",en:"development / improvement"}
+    ]
+  },
+
+  { id:19, level:5, levelName:"Level 5 · Culture", titleEn:"Arabic Coffee", titleAr:"القهوة العربية",
+    sentences:[
+      {ar:["القهوة","العربية","مشروب","تقليدي","مهم","جداً","في","الثقافة","العربية","."], translit:"Al-qahwa al-'arabiyya mashurb taqlidi muhimm jiddan fi ath-thaqafa al-'arabiyya.", en:"Arabic coffee is a very important traditional drink in Arab culture."},
+      {ar:["تُقدَّم","القهوة","للضيوف","عادةً","مع","التمر","في","البيوت","العربية","."], translit:"Tuqaddamu al-qahwa lid-duyuf 'adatan ma'a at-tamr fi al-buyut al-'arabiyya.", en:"Coffee is usually served to guests with dates in Arab homes."},
+      {ar:["تعلمت","كيف","أصنع","القهوة","العربية","من","جدتي","عندما","كنت","صغيراً","."], translit:"Ta'allamtu kayfa asna'u al-qahwa al-'arabiyya min jaddati 'indama kuntu saghiran.", en:"I learned how to make Arabic coffee from my grandmother when I was young."},
+      {ar:["تُضاف","إليها","الهيل","والزعفران","مما","يعطيها","رائحة","ونكهة","مميزة","."], translit:"Tudafu ilayha al-hail waz-za'faran mimma yu'tiha ra'iha wa nakha mumayyaza.", en:"Cardamom and saffron are added to it which gives it a distinctive aroma and flavour."},
+      {ar:["عندما","أشرب","القهوة","العربية","أتذكر","جدتي","وأشعر","بدفء","خاص","."], translit:"'Indama ashrabu al-qahwa al-'arabiyya atadhakkaru jaddati wa ash'uru bi-dif' khass.", en:"When I drink Arabic coffee I remember my grandmother and feel a special warmth."}
+    ],
+    vocab:[
+      {ar:"مشروب",translit:"mashurb",en:"drink / beverage"},
+      {ar:"تقليدي",translit:"taqlidi",en:"traditional"},
+      {ar:"الثقافة",translit:"ath-thaqafa",en:"culture"},
+      {ar:"الضيوف",translit:"ad-duyuf",en:"guests"},
+      {ar:"التمر",translit:"at-tamr",en:"dates (fruit)"},
+      {ar:"تعلمت",translit:"ta'allamtu",en:"I learned (past)"},
+      {ar:"أصنع",translit:"asna'u",en:"I make (present)"},
+      {ar:"جدتي",translit:"jaddati",en:"my grandmother"},
+      {ar:"الهيل",translit:"al-hail",en:"cardamom"},
+      {ar:"أتذكر",translit:"atadhakkaru",en:"I remember (present)"},
+      {ar:"دفء",translit:"dif'",en:"warmth"}
+    ]
+  },
+
+  { id:20, level:5, levelName:"Level 5 · Nature", titleEn:"The Desert", titleAr:"الصحراء",
+    sentences:[
+      {ar:["زرت","الصحراء","لأول","مرة","العام","الماضي","مع","عائلتي","."], translit:"Zurtu as-sahra' li-awwal marra al-'am al-madi ma'a 'a'ilati.", en:"I visited the desert for the first time last year with my family."},
+      {ar:["وصلنا","عند","الغروب","ورأينا","السماء","تتحول","إلى","ألوان","لا","توصف","."], translit:"Wasalna 'ind al-ghurub wa ra'ayna as-sama' tatahawwal ila alwan la tuwasaf.", en:"We arrived at sunset and saw the sky turning into indescribable colours."},
+      {ar:["نمنا","في","خيمة","وسط","الرمال","واستيقظنا","على","صوت","الصمت","."], translit:"Nimna fi khayma wasat ar-rimal wa istayqazna 'ala sawt as-samt.", en:"We slept in a tent in the middle of the sand and woke up to the sound of silence."},
+      {ar:["في","الصباح","ركبنا","الجمال","وتجولنا","في","الرمال","الذهبية","."], translit:"Fi as-sabah rakibna al-jimal wa tajawwalna fi ar-rimal adh-dhahabiyya.", en:"In the morning we rode camels and wandered through the golden sands."},
+      {ar:["الصحراء","علمتني","أن","الطبيعة","أعظم","من","كل","ما","صنعه","الإنسان","."], translit:"As-sahra' 'allamatni anna at-tabi'a a'zam min kull ma sana'ahu al-insan.", en:"The desert taught me that nature is greater than everything mankind has made."}
+    ],
+    vocab:[
+      {ar:"الصحراء",translit:"as-sahra'",en:"the desert"},
+      {ar:"لأول مرة",translit:"li-awwal marra",en:"for the first time"},
+      {ar:"رأينا",translit:"ra'ayna",en:"we saw (past)"},
+      {ar:"السماء",translit:"as-sama'",en:"the sky"},
+      {ar:"نمنا",translit:"nimna",en:"we slept (past)"},
+      {ar:"خيمة",translit:"khayma",en:"tent"},
+      {ar:"الصمت",translit:"as-samt",en:"silence"},
+      {ar:"ركبنا",translit:"rakibna",en:"we rode (past)"},
+      {ar:"الجمال",translit:"al-jimal",en:"camels"},
+      {ar:"تجولنا",translit:"tajawwalna",en:"we wandered (past)"},
+      {ar:"علمتني",translit:"'allamatni",en:"taught me"}
+    ]
+  },
+
+  { id:21, level:5, levelName:"Level 5 · Reflection", titleEn:"What I Have Learned", titleAr:"ما تعلمته",
+    sentences:[
+      {ar:["مضت","سنة","منذ","بدأت","تعلم","اللغة","العربية","وتغيرت","كثيراً","."], translit:"Madat sana mundhu bada'tu ta'allum al-lugha al-'arabiyya wa taghayyartu kathiran.", en:"A year has passed since I started learning Arabic and I have changed a lot."},
+      {ar:["في","البداية","لم","أستطع","قراءة","كلمة","واحدة","والآن","أقرأ","جملاً","كاملة","."], translit:"Fi al-bidaya lam astati' qira'at kalima wahida wal-an aqra'u jumalan kamila.", en:"At the beginning I could not read a single word and now I read complete sentences."},
+      {ar:["تعلمت","أن","الصبر","هو","المفتاح","وأن","الأخطاء","جزء","من","التعلم","."], translit:"Ta'allamtu anna as-sabr huwa al-miftah wa anna al-akhta' juz' min at-ta'allum.", en:"I learned that patience is the key and that mistakes are part of learning."},
+      {ar:["كلما","قرأت","أكثر","فهمت","أكثر","واستمتعت","أكثر","باللغة","."], translit:"Kullama qara'tu akthar fahimtu akthar wa istamta'tu akthar bil-lugha.", en:"The more I read the more I understood and the more I enjoyed the language."},
+      {ar:["اللغة","العربية","ليست","مجرد","كلمات","بل","هي","باب","إلى","حضارة","عظيمة","."], translit:"Al-lugha al-'arabiyya laysat mujarrad kalimat bal hiya bab ila hadara 'azima.", en:"Arabic is not merely words but a door to a great civilisation."}
+    ],
+    vocab:[
+      {ar:"مضت",translit:"madat",en:"passed (past) — of time"},
+      {ar:"تغيرت",translit:"taghayyartu",en:"I changed (past)"},
+      {ar:"لم أستطع",translit:"lam astati'",en:"I could not (past negative)"},
+      {ar:"أقرأ",translit:"aqra'u",en:"I read (present)"},
+      {ar:"الصبر",translit:"as-sabr",en:"patience"},
+      {ar:"المفتاح",translit:"al-miftah",en:"the key"},
+      {ar:"الأخطاء",translit:"al-akhta'",en:"mistakes / errors"},
+      {ar:"كلما",translit:"kullama",en:"the more... the more"},
+      {ar:"استمتعت",translit:"istamta'tu",en:"I enjoyed (past)"},
+      {ar:"باب",translit:"bab",en:"door / gateway"},
+      {ar:"حضارة",translit:"hadara",en:"civilisation"}
+    ]
+  }
+];
+
+/* ════════════════════════════════════════════════  AUDIO  */
+const synth = window.speechSynthesis;
+let arVoice = null;
+function initAudio() {
+  if (!synth) { document.getElementById('noAudio').style.display='inline'; return; }
+  function pick() {
+    const vv = synth.getVoices();
+    arVoice = vv.find(v=>v.lang==='ar-SA')||vv.find(v=>v.lang==='ar-EG')||vv.find(v=>v.lang&&v.lang.startsWith('ar'));
+    if (!arVoice && vv.length>0) {
+      document.getElementById('noAudio').style.display='inline';
+      document.getElementById('noAudio').textContent='⚠ No Arabic voice installed — add one in Settings › Accessibility › Spoken Content';
+    }
+  }
+  pick();
+  if (synth.onvoiceschanged!==undefined) synth.onvoiceschanged=pick;
+}
+function speak(text, rate=0.8) {
+  if (!synth) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='ar-SA'; u.rate=rate; u.pitch=1.0;
+  if (arVoice) u.voice=arVoice;
+  const pill=document.getElementById('audioPill');
+  pill.classList.add('on');
+  u.onend=u.onerror=()=>pill.classList.remove('on');
+  synth.speak(u);
+}
+function speakSentence(sid,si) {
+  const s=STORIES.find(x=>x.id===sid).sentences[si];
+  speak(s.ar.filter(w=>!'.،!?:;،'.includes(w)).join(' '),0.76);
+}
+function speakStory(sid) {
+  const story=STORIES.find(x=>x.id===sid);
+  speak(story.sentences.map(s=>s.ar.filter(w=>!'.،!?:;،'.includes(w)).join(' ')).join(' ، '),0.74);
+  const btn=document.getElementById('play-'+sid);
+  if (btn) {
+    btn.classList.add('speaking'); btn.innerHTML='⏹ Stop';
+    btn.onclick=()=>{synth.cancel();btn.classList.remove('speaking');btn.innerHTML='🔊 Play Story';btn.onclick=()=>speakStory(sid);};
+  }
+}
+
+/* ════════════════════════════════════════════════  FONT SIZE  */
+const SIZES={sm:'1.7rem',md:'2.2rem',lg:'2.8rem',xl:'3.4rem'};
+const PREV ={sm:'1.2rem',md:'1.6rem',lg:'2rem',  xl:'2.5rem'};
+let curSize=localStorage.getItem('arSize')||'md';
+function setSize(k){
+  curSize=k;localStorage.setItem('arSize',k);
+  document.documentElement.style.setProperty('--ar-size',SIZES[k]);
+  document.getElementById('szPrev').style.fontSize=PREV[k];
+  ['sm','md','lg','xl'].forEach(s=>document.getElementById('sz-'+s).classList.toggle('active',s===k));
+}
+
+/* ════════════════════════════════════════════════  STATE  */
+const PUNCT=new Set(['.','،','!','?',':',';']);
+let known=new Set(JSON.parse(localStorage.getItem('arKnown')||'[]'));
+let activeLevel=null, popWord=null;
+function saveKnown(){localStorage.setItem('arKnown',JSON.stringify([...known]));}
+
+function allVocab(){
+  const m={};
+  STORIES.forEach(s=>s.vocab.forEach(v=>{m[v.ar]=v;}));
+  return m;
+}
+
+/* ════════════════════════════════════════════════  PROGRESS  */
+function updateProgress(){
+  const vm=allVocab(), total=Object.keys(vm).length;
+  document.getElementById('knownCount').textContent=known.size;
+  document.getElementById('totalWords').textContent=total;
+  document.getElementById('progressFill').style.width=total?(known.size/total*100)+'%':'0%';
+  const sec=document.getElementById('knownSection'), chips=document.getElementById('knownChips');
+  if (known.size){
+    sec.style.display='block';
+    chips.innerHTML=[...known].map(ar=>{const v=vm[ar];return`<span class="known-chip" title="${v?v.en:''}" onclick="chipPopup('${ar.replace(/'/g,"\\'")}'">${ar}</span>`;}).join('');
+  } else sec.style.display='none';
+}
+function chipPopup(ar){const v=allVocab()[ar];if(!v)return;openPopup(v,'Tap word or 🔊 to hear it.');}
+
+/* ════════════════════════════════════════════════  TABS  */
+function buildTabs(){
+  const levels=[...new Set(STORIES.map(s=>s.level))];
+  const tabs=document.getElementById('levelTabs');
+  tabs.innerHTML='<button class="level-tab active" onclick="filterLevel(null,this)">All Stories</button>';
+  levels.forEach(l=>{
+    const nm=STORIES.find(s=>s.level===l).levelName.split('·')[0].trim();
+    tabs.innerHTML+=`<button class="level-tab" onclick="filterLevel(${l},this)">${nm}</button>`;
+  });
+}
+function filterLevel(lv,btn){
+  activeLevel=lv;
+  document.querySelectorAll('.level-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); render(); setTimeout(initAllGames,50);
+}
+
+/* ════════════════════════════════════════════════  RENDER  */
+function render(){
+  const list=activeLevel?STORIES.filter(s=>s.level===activeLevel):STORIES;
+  document.getElementById('storyCount').textContent=list.length;
+  document.getElementById('stories').innerHTML=list.map(renderStory).join('');
+}
+
+function renderStory(story){
+  const sents=story.sentences;
+  const navBtns=sents.map((_,i)=>
+    `<button class="sent-btn" id="sb-${story.id}-${i}" onclick="focusSent(${story.id},${i})">${i+1}</button>`
+  ).join('')+
+  `<button class="sent-btn" id="sb-${story.id}-all" onclick="focusSent(${story.id},-1)" style="width:auto;padding:0 10px;border-radius:12px;font-size:0.65rem">ALL</button>`;
+
+  const arHTML=sents.map((s,si)=>{
+    const words=s.ar.map(w=>{
+      if (PUNCT.has(w)) return`<span style="color:#999;font-size:75%">${w}</span>`;
+      const isk=known.has(w);
+      const isVerb=!!VERB_DATA[w];
+      const safe=w.replace(/'/g,"\\'");
+      return`<span class="arabic-word${isk?' known':''}${isVerb?' is-verb':''}"
+        onclick="wordClick(event,'${safe}',${story.id},${si})"
+        onmouseenter="showTip(event,'${safe}')"
+        onmouseleave="hideTip()"
+      >${w}</span>`;
+    }).join(' ');
+    return`<span class="ar-sentence" id="sent-${story.id}-${si}">
+      <button class="sent-spk" onclick="speakSentence(${story.id},${si})" title="Hear sentence">🔊</button>
+      ${words}
+    </span>`;
+  }).join('');
+
+  const vcards=story.vocab.map((v,vi)=>{
+    const isk=known.has(v.ar);
+    const isVerb=!!VERB_DATA[v.ar];
+    const safe=v.ar.replace(/'/g,"\\'");
+    return`<div class="vocab-card${isk?' known':''}${isVerb?' is-verb':''}" onclick="vocabPopup(${story.id},${vi})">
+      <div class="vocab-mark">${isk?'✓':''}</div>
+      <div class="vocab-top">
+        <div class="vocab-ar">${v.ar}</div>
+        <button class="vocab-spk" onclick="event.stopPropagation();speak('${safe}')" title="Hear">🔊</button>
+      </div>
+      <div class="vocab-translit">${v.translit}</div>
+      <div class="vocab-en">${v.en}</div>
+      ${isVerb?'<div class="vocab-tag">verb ⚙</div>':''}
+    </div>`;
+  }).join('');
+
+  return`<div class="story-card" id="sc-${story.id}">
+    <div class="story-header">
+      <span class="story-num">Story ${story.id} · ${story.levelName}</span>
+      <span class="story-title-en">${story.titleEn}</span>
+      <span class="story-title-ar">${story.titleAr}</span>
+    </div>
+    <div class="story-body">
+      <div class="sent-nav">${navBtns}</div>
+      <div class="controls">
+        <button class="btn btn-play" id="play-${story.id}" onclick="speakStory(${story.id})">🔊 Play Story</button>
+        <button class="btn btn-outline" id="tl-${story.id}" onclick="togTranslit(${story.id})">Show Pronunciation</button>
+        <button class="btn btn-outline" id="tr-${story.id}" onclick="togTransl(${story.id})">Show Translation</button>
+      </div>
+      <div class="arabic-text" id="at-${story.id}" dir="rtl">${arHTML}</div>
+      <div class="translit" id="tlit-${story.id}">${sents.map(s=>s.translit).join('<br>')}</div>
+      <div class="transl"   id="trnsl-${story.id}">${sents.map(s=>s.en).join('<br>')}</div>
+      <div class="vocab-section">
+        <div class="vocab-hdr">Vocabulary in this story</div>
+        <div class="vocab-grid">${vcards}</div>
+      </div>
+      <div class="practice-zone">
+        <div class="practice-hdr">
+          <span class="practice-title">🎮 Practice</span>
+          <div class="game-tabs">
+            <button class="game-tab active" onclick="switchGame(${story.id},'flash',this)">Flashcards</button>
+            <button class="game-tab" onclick="switchGame(${story.id},'mc',this)">Quiz</button>
+            <button class="game-tab" onclick="switchGame(${story.id},'fill',this)">Fill the Gap</button>
+          </div>
+        </div>
+        <div class="game-area" id="game-${story.id}"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════  VERB PANEL  */
+function buildVerbPanel(vd) {
+  // Coloured anatomy word
+  let anatomyWord='';
+  if (vd.prefix) anatomyWord+=`<span class="part-prefix">${vd.prefix}</span>`;
+  anatomyWord+=`<span class="part-root">${vd.coreAr}</span>`;
+  if (vd.suffix) anatomyWord+=`<span class="part-suffix">${vd.suffix}</span>`;
+
+  // Labels
+  let labels='';
+  if (vd.prefix) labels+=`<span class="lbl lbl-prefix">${vd.prefix}<br>prefix</span>`;
+  labels+=`<span class="lbl lbl-root">root<br><span style="font-family:Amiri,serif;font-size:1.1rem">${vd.root.join('-')}</span></span>`;
+  if (vd.suffix) labels+=`<span class="lbl lbl-suffix">${vd.suffix}<br>suffix</span>`;
+
+  // Legend
+  const legend=`<div class="anatomy-legend">
+    <span class="leg-item"><span class="leg-dot" style="background:var(--prefix-col)"></span> prefix (who)</span>
+    <span class="leg-item"><span class="leg-dot" style="background:var(--root-col)"></span> root (meaning)</span>
+    ${vd.suffix?`<span class="leg-item"><span class="leg-dot" style="background:var(--suffix-col)"></span> suffix (who/tense)</span>`:''}
+  </div>`;
+
+  // Related forms
+  const formsHTML=vd.forms.map(f=>`<div class="form-item">
+    <div class="form-label">${f.label}</div>
+    <div class="form-ar">${f.ar}</div>
+    <div class="form-tr">${f.translit}</div>
+    <div class="form-en">${f.en}</div>
+  </div>`).join('');
+
+  return`
+    ${legend}
+    <div class="anatomy-wrap">
+      <div class="anatomy-word">${anatomyWord}</div>
+      <div class="anatomy-labels">${labels}</div>
+    </div>
+    <div class="verb-row"><span class="verb-key">Root</span><span class="verb-val"><span class="ar-inline">${vd.root.join(' · ')}</span> — "${vd.rootMeaning}"</span></div>
+    <div class="verb-row"><span class="verb-key">Tense</span><span class="verb-val"><strong>${vd.tense}</strong></span></div>
+    <div class="verb-row"><span class="verb-key">Pattern</span><span class="verb-val">${vd.pattern}</span></div>
+    <div class="verb-explain">${vd.explain}</div>
+    <div style="margin-top:14px">
+      <div class="verb-row" style="margin-bottom:8px"><span class="verb-key">See also</span><span class="verb-val" style="font-size:0.8rem;color:var(--muted)">related forms of this verb</span></div>
+      <div class="forms-grid">${formsHTML}</div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════  POPUP  */
+function openPopup(v, ctx) {
+  popWord=v;
+  document.getElementById('popAr').textContent=v.ar;
+  document.getElementById('popTr').textContent=v.translit;
+  document.getElementById('popEn').textContent=v.en;
+  document.getElementById('popCtx').textContent=ctx;
+
+  // Verb panel
+  const panel=document.getElementById('verbPanel');
+  const body=document.getElementById('verbPanelBody');
+  const vd=VERB_DATA[v.ar];
+  if (vd) {
+    body.innerHTML=buildVerbPanel(vd);
+    panel.style.display='block';
+  } else {
+    panel.style.display='none';
+  }
+
+  document.getElementById('overlay').classList.add('on');
+  setTimeout(()=>speak(v.ar),250);
+}
+
+function wordClick(e,ar,sid,si){
+  e.stopPropagation(); hideTip();
+  const v=allVocab()[ar]; if(!v) return;
+  const ctx='"'+STORIES.find(s=>s.id===sid).sentences[si].en+'"';
+  openPopup(v,ctx);
+}
+function vocabPopup(sid,vi){
+  const story=STORIES.find(s=>s.id===sid);
+  openPopup(story.vocab[vi],`From: ${story.titleEn} — ${story.levelName}`);
+}
+function closePopup(){
+  synth&&synth.cancel();
+  document.getElementById('overlay').classList.remove('on');
+  popWord=null;
+}
+function markKnown(){
+  if(!popWord)return;
+  known.has(popWord.ar)?known.delete(popWord.ar):known.add(popWord.ar);
+  saveKnown(); closePopup(); updateProgress(); render();
+}
+
+document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closePopup();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();});
+
+/* ════════════════════════════════════════════════  SENTENCE FOCUS  */
+function focusSent(sid,si){
+  const story=STORIES.find(s=>s.id===sid);
+  story.sentences.forEach((_,i)=>{
+    const b=document.getElementById(`sb-${sid}-${i}`);
+    const el=document.getElementById(`sent-${sid}-${i}`);
+    if(b)b.classList.toggle('active',si===i);
+    if(el)el.style.display=(si===-1||si===i)?'block':'none';
+  });
+  const ab=document.getElementById(`sb-${sid}-all`);
+  if(ab)ab.classList.toggle('active',si===-1);
+  const tl=document.getElementById(`tlit-${sid}`),tr=document.getElementById(`trnsl-${sid}`);
+  if(tl&&tl.classList.contains('on'))tl.innerHTML=si===-1?story.sentences.map(s=>s.translit).join('<br>'):story.sentences[si].translit;
+  if(tr&&tr.classList.contains('on'))tr.innerHTML=si===-1?story.sentences.map(s=>s.en).join('<br>'):story.sentences[si].en;
+  if(si>=0)speakSentence(sid,si);
+}
+
+function togTranslit(sid){
+  const el=document.getElementById(`tlit-${sid}`),btn=document.getElementById(`tl-${sid}`);
+  el.classList.toggle('on');btn.classList.toggle('active');
+  btn.textContent=el.classList.contains('on')?'Hide Pronunciation':'Show Pronunciation';
+}
+function togTransl(sid){
+  const el=document.getElementById(`trnsl-${sid}`),btn=document.getElementById(`tr-${sid}`);
+  el.classList.toggle('on');btn.classList.toggle('active');
+  btn.textContent=el.classList.contains('on')?'Hide Translation':'Show Translation';
+}
+
+/* ════════════════════════════════════════════════  TOOLTIP  */
+function showTip(e,ar){
+  const v=allVocab()[ar]; if(!v)return;
+  document.getElementById('tipAr').textContent=v.ar;
+  document.getElementById('tipTr').textContent=v.translit;
+  document.getElementById('tipEn').textContent=v.en;
+  const vd=VERB_DATA[v.ar];
+  const tv=document.getElementById('tipVerb');
+  tv.textContent=vd?`verb · ${vd.tense} · root: ${vd.root.join('-')} "${vd.rootMeaning}"  ⚙ click for breakdown`:'';
+  document.getElementById('tip').classList.add('on');
+  posTip(e);
+}
+function posTip(e){
+  const t=document.getElementById('tip');
+  let x=e.clientX+18,y=e.clientY+18;
+  if(x+240>window.innerWidth)x=e.clientX-248;
+  if(y+150>window.innerHeight)y=e.clientY-156;
+  t.style.left=x+'px';t.style.top=y+'px';
+}
+function hideTip(){document.getElementById('tip').classList.remove('on');}
+document.addEventListener('mousemove',e=>{if(document.getElementById('tip').classList.contains('on'))posTip(e);});
+
+
+/* ════════════════════════════════════════════════
+   PRACTICE GAMES
+════════════════════════════════════════════════ */
+
+// Game state per story
+const gameState = {};
+
+function getGameState(sid) {
+  if (!gameState[sid]) gameState[sid] = { mode:'flash', fc:{idx:0,flipped:false,score:0,total:0}, mc:{idx:0,score:0,total:0,done:false}, fill:{idx:0,score:0,total:0,done:false} };
+  return gameState[sid];
+}
+
+function switchGame(sid, mode, btn) {
+  const gs = getGameState(sid);
+  gs.mode = mode;
+  // update tab styling
+  const tabs = btn.parentElement.querySelectorAll('.game-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderGame(sid);
+}
+
+function renderGame(sid) {
+  const story = STORIES.find(s => s.id === sid);
+  const gs = getGameState(sid);
+  const area = document.getElementById('game-' + sid);
+  if (!area) return;
+  if (gs.mode === 'flash') area.innerHTML = buildFlash(story, gs);
+  else if (gs.mode === 'mc')   area.innerHTML = buildMC(story, gs);
+  else if (gs.mode === 'fill') area.innerHTML = buildFill(story, gs);
+}
+
+// ─── FLASHCARDS ───────────────────────────────
+function buildFlash(story, gs) {
+  const words = story.vocab;
+  const fc = gs.fc;
+  if (fc.idx >= words.length) {
+    return resultScreen(fc.score, words.length,
+      `<button class="btn-restart btn-teal" onclick="resetFlash(${story.id})">🔄 Again</button>
+       <button class="btn-restart btn-gold-bg" onclick="switchGameById(${story.id},'mc')">Try the Quiz →</button>`);
+  }
+  const v = words[fc.idx];
+  const safe = v.ar.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return `
+    <div class="score-strip">
+      <div class="score-pill">Card <span>${fc.idx+1}</span> / ${words.length}</div>
+      <div class="progress-dots">${words.map((_,i)=>`<div class="pdot${i<fc.idx?(i<fc.score?' correct':' wrong'):(i===fc.idx?' cur':'')}"></div>`).join('')}</div>
+    </div>
+    <div class="flashcard-wrap" onclick="flipCard(${story.id})">
+      <div class="flashcard${fc.flipped?' flipped':''}" id="fc-${story.id}">
+        <div class="fc-face fc-front">
+          <div class="fc-label">Arabic — tap to reveal</div>
+          <div class="fc-ar">${v.ar}</div>
+          <div class="fc-tr">${v.translit}</div>
+          <div class="fc-hint">Tap card to see meaning</div>
+        </div>
+        <div class="fc-face fc-back">
+          <div class="fc-label">English meaning</div>
+          <div class="fc-en">${v.en}</div>
+          <div class="fc-ar" style="font-size:1.8rem;margin-top:6px">${v.ar}</div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn fc-no" onclick="fcAnswer(${story.id},false)">✗ Still learning</button>
+      <span class="fc-counter">${fc.flipped ? 'Did you know it?' : 'Flip first!'}</span>
+      <button class="fc-btn fc-yes" onclick="fcAnswer(${story.id},true)">✓ Got it!</button>
+    </div>
+    <div style="text-align:center;margin-top:6px">
+      <button class="fc-btn fc-skip" onclick="fcSpeak('${safe}')">🔊 Hear word</button>
+    </div>`;
+}
+
+function flipCard(sid) {
+  const gs = getGameState(sid); gs.fc.flipped = !gs.fc.flipped; renderGame(sid);
+}
+function fcSpeak(ar) { speak(ar); }
+function fcAnswer(sid, correct) {
+  const gs = getGameState(sid);
+  if (!gs.fc.flipped) { gs.fc.flipped = true; renderGame(sid); return; }
+  if (correct) gs.fc.score++;
+  gs.fc.idx++; gs.fc.flipped = false; gs.fc.total++;
+  renderGame(sid);
+}
+function resetFlash(sid) { getGameState(sid).fc = {idx:0,flipped:false,score:0,total:0}; renderGame(sid); }
+
+// ─── MULTIPLE CHOICE QUIZ ─────────────────────
+function buildMC(story, gs) {
+  const words = story.vocab;
+  const mc = gs.mc;
+  if (mc.done || mc.idx >= words.length) {
+    return resultScreen(mc.score, words.length,
+      `<button class="btn-restart btn-teal" onclick="resetMC(${story.id})">🔄 Try Again</button>
+       <button class="btn-restart btn-gold-bg" onclick="switchGameById(${story.id},'fill')">Fill the Gap →</button>`);
+  }
+  const v = words[mc.idx];
+  // Pick 3 wrong answers from rest of vocab
+  const others = words.filter((_,i) => i !== mc.idx);
+  const wrong = shuffle(others).slice(0, 3).map(w => w.en);
+  const choices = shuffle([v.en, ...wrong]);
+  const safe = v.ar.replace(/'/g,"\\'");
+
+  return `
+    <div class="score-strip">
+      <div class="score-pill">Q <span>${mc.idx+1}</span> / ${words.length}</div>
+      <div class="score-pill">Score <span>${mc.score}</span></div>
+      <div class="progress-dots">${words.map((_,i)=>`<div class="pdot${i<mc.idx?' correct':(i===mc.idx?' cur':'')}"></div>`).join('')}</div>
+    </div>
+    <div class="mc-question">
+      <div class="mc-prompt">What does this word mean?</div>
+      <div class="mc-arabic" onclick="speak('${safe}')">${v.ar}</div>
+      <div class="mc-translit">${v.translit}</div>
+    </div>
+    <div class="mc-choices">
+      ${choices.map(c => `<button class="mc-choice" onclick="mcAnswer(${story.id},'${c.replace(/'/g,"\\'")}','${v.en.replace(/'/g,"\\'")}')">${c}</button>`).join('')}
+    </div>
+    <div class="mc-feedback" id="mc-fb-${story.id}"></div>`;
+}
+
+function mcAnswer(sid, chosen, correct) {
+  const gs = getGameState(sid);
+  const area = document.getElementById('game-' + sid);
+  const btns = area.querySelectorAll('.mc-choice');
+  btns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct) b.classList.add('correct');
+    else if (b.textContent === chosen && chosen !== correct) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('mc-fb-' + sid);
+  const right = chosen === correct;
+  if (right) { gs.mc.score++; fb.textContent = '✓ Correct! Well done.'; fb.className='mc-feedback good'; }
+  else { fb.textContent = `✗ It was "${correct}"`; fb.className='mc-feedback bad'; }
+  if (right) speak(STORIES.find(s=>s.id===sid).vocab[gs.mc.idx].ar);
+  gs.mc.idx++;
+  if (gs.mc.idx >= STORIES.find(s=>s.id===sid).vocab.length) gs.mc.done = true;
+  setTimeout(() => renderGame(sid), right ? 1100 : 1600);
+}
+function resetMC(sid) { const gs=getGameState(sid); gs.mc={idx:0,score:0,total:0,done:false}; renderGame(sid); }
+
+// ─── FILL THE GAP ─────────────────────────────
+function buildFill(story, gs) {
+  const sents = story.sentences.filter(s => s.ar.filter(w => !PUNCT.has(w)).length >= 3);
+  const fill = gs.fill;
+  if (fill.done || fill.idx >= sents.length) {
+    return resultScreen(fill.score, sents.length,
+      `<button class="btn-restart btn-teal" onclick="resetFill(${story.id})">🔄 Try Again</button>
+       <button class="btn-restart btn-gold-bg" onclick="switchGameById(${story.id},'flash')">← Flashcards</button>`);
+  }
+  const sent = sents[fill.idx];
+  // Pick a content word to blank out (not punctuation, prefer vocab words)
+  const contentWords = sent.ar.filter(w => !PUNCT.has(w));
+  const vocabInSent = contentWords.filter(w => story.vocab.some(v => v.ar === w));
+  const target = vocabInSent.length > 0 ? vocabInSent[Math.floor(Math.random() * vocabInSent.length)] : contentWords[Math.floor(contentWords.length/2)];
+  
+  // Build sentence with blank
+  const sentHTML = sent.ar.map(w => {
+    if (PUNCT.has(w)) return `<span style="color:#999;font-size:70%">${w}</span>`;
+    if (w === target) return `<span class="fb-blank" id="fb-blank-${story.id}">___</span>`;
+    return `<span>${w}</span>`;
+  }).join(' ');
+
+  // Distractors from vocab
+  const others = story.vocab.filter(v => v.ar !== target).map(v => v.ar);
+  const distractors = shuffle(others).slice(0,3);
+  const chips = shuffle([target, ...distractors]);
+
+  gs.fill._target = target;
+  gs.fill._sents = sents;
+
+  return `
+    <div class="score-strip">
+      <div class="score-pill">Sentence <span>${fill.idx+1}</span> / ${sents.length}</div>
+      <div class="score-pill">Score <span>${fill.score}</span></div>
+      <div class="progress-dots">${sents.map((_,i)=>`<div class="pdot${i<fill.idx?' correct':(i===fill.idx?' cur':'')}"></div>`).join('')}</div>
+    </div>
+    <div class="fb-en-hint">💬 "${sent.en}"</div>
+    <div class="fb-sentence" dir="rtl">${sentHTML}</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:8px">Choose the missing word:</div>
+    <div class="fb-choices">
+      ${chips.map(w => `<button class="fb-chip" onclick="fillAnswer(${story.id},'${w.replace(/'/g,"\\'")}',this)">${w}</button>`).join('')}
+    </div>
+    <div class="fb-feedback" id="fb-fb-${story.id}"></div>`;
+}
+
+function fillAnswer(sid, chosen, btn) {
+  const gs = getGameState(sid);
+  const target = gs.fill._target;
+  const area = document.getElementById('game-' + sid);
+  const chips = area.querySelectorAll('.fb-chip');
+  chips.forEach(c => c.disabled = true);
+  const blank = document.getElementById('fb-blank-' + sid);
+  const right = chosen === target;
+  btn.classList.add(right ? 'correct-chip' : 'wrong-chip');
+  if (!right) chips.forEach(c => { if (c.textContent.trim() === target) c.classList.add('correct-chip'); });
+  if (blank) { blank.textContent = chosen; blank.classList.add(right ? 'filled-correct' : 'filled-wrong'); }
+  const fb = document.getElementById('fb-fb-' + sid);
+  if (right) { gs.fill.score++; fb.textContent = '✓ Correct!'; fb.className='fb-feedback good'; speak(target); }
+  else { fb.textContent = `✗ The answer was: ${target}`; fb.className='fb-feedback bad'; }
+  gs.fill.idx++;
+  if (gs.fill.idx >= gs.fill._sents.length) gs.fill.done = true;
+  setTimeout(() => renderGame(sid), right ? 1100 : 1700);
+}
+function resetFill(sid) { const gs=getGameState(sid); gs.fill={idx:0,score:0,total:0,done:false}; renderGame(sid); }
+
+// ─── HELPERS ──────────────────────────────────
+function switchGameById(sid, mode) {
+  const area = document.getElementById('game-' + sid);
+  const tabs = area.parentElement.querySelectorAll('.game-tab');
+  const modeMap = {flash:0, mc:1, fill:2};
+  tabs.forEach((t,i) => t.classList.toggle('active', i === modeMap[mode]));
+  getGameState(sid).mode = mode;
+  renderGame(sid);
+}
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function resultScreen(score, total, actions) {
+  const pct = total > 0 ? Math.round(score/total*100) : 0;
+  const stars = pct >= 80 ? '★★★' : pct >= 50 ? '★★☆' : '★☆☆';
+  const emoji = pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '💪';
+  const msg = pct >= 80 ? 'Excellent! You know these words well.' : pct >= 50 ? 'Good effort — keep practising!' : 'Keep going — it gets easier!';
+  return `<div class="result-screen">
+    <div class="result-emoji">${emoji}</div>
+    <div class="result-score">${score} / ${total}</div>
+    <div class="result-stars">${stars}</div>
+    <div class="result-msg">${msg}</div>
+    ${actions}
+  </div>`;
+}
+
+// Initialise all game areas after render
+function initAllGames() {
+  STORIES.forEach(s => {
+    const area = document.getElementById('game-' + s.id);
+    if (area && area.innerHTML.trim() === '') renderGame(s.id);
+  });
+}
+
+/* ════════════════════════════════════════════════  INIT  */
+initAudio();
+setSize(curSize);
+buildTabs();
+render();
+updateProgress();
+setTimeout(initAllGames, 50);
+</script>
+</body>
+</html>
