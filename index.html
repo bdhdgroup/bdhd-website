@@ -350,9 +350,92 @@
                 margin-bottom: 2px;
             }
         }
+        /* ── Site nav (shared with /writing/) ── */
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 26px 6vw;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .mark { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .sq { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 26px; height: 26px; }
+        .sq i { display: block; background: #5271FF; }
+        .sq i:nth-child(2) { background: #768DFF; }
+        .sq i:nth-child(3) { background: #99AAFF; }
+        .sq i:nth-child(4) { background: #BAC6FF; }
+        .mark b { font-weight: 600; letter-spacing: .14em; font-size: 14px; color: #1A1A2E; }
+        .mark span { color: #6E6E86; font-size: 14px; letter-spacing: .14em; }
+
+        .top nav { display: flex; gap: 28px; font-size: 15px; color: #3A3A52; }
+        .top nav a {
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+        .top nav a:hover { color: #3F5CE8; }
+        .top nav a.here { border-color: #5271FF; }
+
+        @media (max-width: 900px) {
+            .top { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px 6vw; }
+            .top nav { gap: 12px 20px; flex-wrap: wrap; font-size: 14px; width: 100%; }
+        }
+
+        .footer__links {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer__links a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .footer__links a:hover {
+            border-bottom-color: var(--primary);
+        }
+
+        /* ── Latest writing ── */
+
+        .latest__title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 26px;
+            font-weight: 500;
+            line-height: 1.25;
+            margin-bottom: 14px;
+        }
+
+        .latest__title a {
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .latest__title a:hover { border-bottom-color: var(--primary); }
+
+        .latest__meta {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- Site nav -->
+    <header class="top">
+        <a class="mark" href="/"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>BDHD</b><span>GROUP</span></a>
+        <nav aria-label="Primary"><a href="/#about">About</a><a href="/phil-broadhead">Phil Broadhead OBE</a><a href="/writing/">Writing</a><a href="/#contact">Contact</a></nav>
+    </header>
 
     <!-- Hero -->
     <section class="hero">
@@ -361,7 +444,7 @@
     </section>
 
     <!-- About -->
-    <section class="section section--tinted">
+    <section class="section section--tinted" id="about">
         <div class="container">
             <h2 class="section__heading">What we do</h2>
             <div class="prose">
@@ -416,8 +499,22 @@
         </div>
     </section>
 
-    <!-- Contact -->
+    <!-- LATEST_WRITING:START -->
     <section class="section">
+        <div class="container">
+            <h2 class="section__heading">Latest writing</h2>
+            <p class="latest__meta">September 2026 &middot; 4 min read</p>
+            <p class="latest__title"><a href="/writing/modular-rare-earth-refineries/">Could Modular Rare Earth Refineries Break China&#39;s Stranglehold?</a></p>
+            <div class="prose">
+                <p>Rare earths aren&#39;t rare. What&#39;s scarce is the will to build a refinery. Two technologies could shrink the plant to the size of a shipping container, and the Gulf is where the first one might land.</p>
+            </div>
+            <p class="profile-link"><a href="/writing/">Read this and everything else</a></p>
+        </div>
+    </section>
+    <!-- LATEST_WRITING:END -->
+
+    <!-- Contact -->
+    <section class="section" id="contact">
         <div class="container">
             <h2 class="section__heading">Get in touch</h2>
             <p class="contact__intro">BDHD Group is currently engaged across higher education infrastructure development in the Gulf and policy development around delivery capacity under the UK's new devolution settlement.</p>
@@ -433,6 +530,7 @@
     <!-- Footer -->
     <footer class="footer">
         <p class="footer__text"><img src="bdhd_four_squares.png" class="footer__mark" alt="">BDHD Group. Dubai, UAE. &copy; 2026</p>
+        <p class="footer__links"><a href="/phil-broadhead">Phil Broadhead OBE</a> <span aria-hidden="true">&middot;</span> <a href="/writing/">Writing</a></p>
     </footer>
 
 </body>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESC}}">
+<link rel="canonical" href="{{CANONICAL}}">
+<meta property="og:title" content="{{OG_TITLE}}">
+<meta property="og:description" content="{{DESC}}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:image" content="{{OG_IMAGE}}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" type="application/rss+xml" title="Writing - BDHD Group" href="/writing/feed.xml">
+<link rel="icon" type="image/png" href="/bdhd_four_squares.png">
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/playfair.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/sourcesans.woff2" crossorigin>
+<style>{{CSS}}</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+{{HEADER}}
+
+<main id="main">
+<div class="hero">
+  <div class="in">
+    <div>
+      <p class="kicker">Latest, <em>{{HERO_MONTH}}</em></p>
+      <h1><a href="{{HERO_URL}}">{{HERO_TITLE}}</a></h1>
+      <p>{{HERO_STAND}}</p>
+      <div class="meta"><span>{{HERO_READ}}</span><span>{{HERO_TOPICS}}</span></div>
+      <a class="cta" href="{{HERO_URL}}">Read the piece
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4"/></svg></a>
+    </div>
+    <div class="plate big reveal" aria-hidden="true">{{HERO_PLATE}}</div>
+  </div>
+</div>
+
+<div class="list">
+  <h2>Writing</h2>
+  <p class="sub">Essays and columns on the Gulf economy, government, and where policy meets private capital. Some first appeared elsewhere; all of them live here.</p>
+{{ROWS}}
+</div>
+{{STRIP}}
+</main>
+
+{{FOOTER}}
+</body>
+</html>

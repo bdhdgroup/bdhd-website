@@ -1,0 +1,24 @@
+{
+  "name": "bdhd-website",
+  "version": "1.0.0",
+  "description": "Static site for bdhd.ae",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdhdgroup/bdhd-website.git"
+  },
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/bdhdgroup/bdhd-website/issues"
+  },
+  "homepage": "https://github.com/bdhdgroup/bdhd-website#readme",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "js-yaml": "^5.4.1",
+    "marked": "^18.0.12",
+    "sharp": "^0.35.4"
+  },
+  "private": true
+}

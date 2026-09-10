@@ -296,15 +296,49 @@
                 padding: 32px 24px 0;
             }
         }
+        /* ── Site nav (shared with /writing/) ── */
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 26px 6vw;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .mark { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .sq { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 26px; height: 26px; }
+        .sq i { display: block; background: #5271FF; }
+        .sq i:nth-child(2) { background: #768DFF; }
+        .sq i:nth-child(3) { background: #99AAFF; }
+        .sq i:nth-child(4) { background: #BAC6FF; }
+        .mark b { font-weight: 600; letter-spacing: .14em; font-size: 14px; color: #1A1A2E; }
+        .mark span { color: #6E6E86; font-size: 14px; letter-spacing: .14em; }
+
+        .top nav { display: flex; gap: 28px; font-size: 15px; color: #3A3A52; }
+        .top nav a {
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+        .top nav a:hover { color: #3F5CE8; }
+        .top nav a.here { border-color: #5271FF; }
+
+        @media (max-width: 900px) {
+            .top { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px 6vw; }
+            .top nav { gap: 12px 20px; flex-wrap: wrap; font-size: 14px; width: 100%; }
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- Masthead -->
-    <header class="masthead">
-        <a href="/" class="masthead__logo" aria-label="BDHD Group - home">
-            <img src="BHDH%20Group%20Logo.png" alt="BDHD Group">
-        </a>
+    <!-- Site nav -->
+    <header class="top">
+        <a class="mark" href="/"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>BDHD</b><span>GROUP</span></a>
+        <nav aria-label="Primary"><a href="/#about">About</a><a href="/phil-broadhead" class="here">Phil Broadhead OBE</a><a href="/writing/">Writing</a><a href="/#contact">Contact</a></nav>
     </header>
 
     <!-- Bio -->
