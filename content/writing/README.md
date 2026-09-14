@@ -15,7 +15,7 @@ Three steps.
 
 The build regenerates the whole Writing section every time, so it is safe to run
 repeatedly. It writes `writing/index.html`, one folder per article, an Open Graph
-image for each, `writing/feed.xml`, and refreshes `sitemap.xml`.
+card (`og.jpg`, 1200x630) for each, `writing/feed.xml`, and refreshes `sitemap.xml`.
 
 ## Front matter template
 

@@ -9,7 +9,7 @@
  * Usage: npm run build
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
@@ -173,7 +173,7 @@ function ogPlateInner(a) {
     .replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
 }
 
-function ogSvg(title, plateInner) {
+function ogSvg(title, plateInner, { line1 = AUTHOR, line2 = 'bdhd.ae' } = {}) {
   const W = 1200, H = 630, split = Math.round(W * 0.55);
   const pad = 64, avail = split - pad * 2;
   let size = 58, lines = wrapText(title, size, avail);
@@ -193,17 +193,35 @@ function ogSvg(title, plateInner) {
     + `<rect x="${split - 1}" y="0" width="3" height="${H}" fill="${PALETTE.b1}"/>`
     + `<text font-family="Playfair Display" font-size="${size}" fill="#FFFFFF">${tspans}</text>`
     + `<g font-family="Source Sans 3" font-size="21" fill="${PALETTE.b4}">`
-    + `<text x="${pad}" y="${H - 52}">${esc(AUTHOR)}</text>`
-    + `<text x="${pad}" y="${H - 24}" fill="#8E9BD6">bdhd.ae</text></g>`
+    + `<text x="${pad}" y="${H - 52}">${esc(line1)}</text>`
+    + `<text x="${pad}" y="${H - 24}" fill="#8E9BD6">${esc(line2)}</text></g>`
     + `</svg>`;
 }
 
-function renderOg(svg, outPath) {
+/**
+ * Rasterise the card and write it as a JPEG. Share crawlers are happiest with
+ * a small, flat JPEG: X in particular silently drops a card whose image it
+ * decides is too heavy, and a photographic PNG at 1200x630 easily passes 1MB.
+ */
+async function renderOg(svg, outPath) {
   const r = new Resvg(svg, {
     font: { fontFiles: FONTS, loadSystemFonts: false, defaultFontFamily: 'Source Sans 3' },
     fitTo: { mode: 'width', value: 1200 },
   });
-  writeFileSync(outPath, r.render().asPng());
+  const png = r.render().asPng();
+  const jpg = await sharp(png).flatten({ background: PALETTE.ink })
+    .jpeg({ quality: 84, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer();
+  writeFileSync(outPath, jpg);
+  return jpg.length;
+}
+
+/** Card for the homepage: the company lockup with the four-square plate. */
+async function buildHomeCard() {
+  const dir = join(ROOT, 'assets');
+  mkdirSync(dir, { recursive: true });
+  const plate = plateSvg(2, 'home').replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  const svg = ogSvg('BDHD Group', plate, { line1: 'Advisory | Investment | Governance', line2: 'bdhd.ae' });
+  return renderOg(svg, join(dir, 'og-home.jpg'));
 }
 
 /* ---------- content ---------- */
@@ -465,7 +483,8 @@ function buildIndex(articles, css, tpl) {
     DESC: 'Essays and columns on the Gulf economy, government, and where policy meets private capital, by Phil Broadhead OBE.',
     OG_TITLE: 'Writing | BDHD Group',
     CANONICAL: `${SITE}/writing/`,
-    OG_IMAGE: `${SITE}/writing/${hero.slug}/og.png`,
+    OG_IMAGE: `${SITE}/writing/${hero.slug}/og.jpg`,
+    OG_ALT: esc(hero.title),
     CSS: css,
     HEADER: header('writing'),
     FOOTER: footer(),
@@ -508,7 +527,7 @@ ${others.map((o) => `    <a href="${o.path}">${esc(o.title)}<small>${esc(monthYe
     datePublished: isoDate(a.date),
     author: { '@type': 'Person', name: AUTHOR, url: `${SITE}/phil-broadhead` },
     publisher: { '@type': 'Organization', name: 'BDHD Group', url: SITE },
-    image: `${SITE}${a.path}og.png`,
+    image: `${SITE}${a.path}og.jpg`,
     mainEntityOfPage: { '@type': 'WebPage', '@id': a.url },
     ...(a.topics ? { keywords: a.topics } : {}),
   }, null, 2);
@@ -522,7 +541,8 @@ ${others.map((o) => `    <a href="${o.path}">${esc(o.title)}<small>${esc(monthYe
     OG_TITLE: esc(a.title),
     CANONICAL: a.canonical,
     PAGE_URL: a.url,
-    OG_IMAGE: `${SITE}${a.path}og.png`,
+    OG_IMAGE: `${SITE}${a.path}og.jpg`,
+    OG_ALT: esc(a.title),
     PUBLISHED_TIME: isoDate(a.date),
     JSONLD: jsonld,
     CSS: css,
@@ -648,13 +668,16 @@ async function main() {
     const dir = join(OUT, a.slug);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, 'index.html'), buildArticle(a, articles, css, articleTpl));
-    renderOg(ogSvg(a.title, ogPlateInner(a)), join(dir, 'og.png'));
+    const stale = join(dir, 'og.png');
+    if (existsSync(stale)) unlinkSync(stale);
+    await renderOg(ogSvg(a.title, ogPlateInner(a)), join(dir, 'og.jpg'));
   }
 
   writeFileSync(join(OUT, 'index.html'), buildIndex(articles, css, indexTpl));
   writeFileSync(join(OUT, 'feed.xml'), buildFeed(articles));
   writeFileSync(join(ROOT, 'sitemap.xml'), buildSitemap(articles));
   const homeOk = buildHomepageBlock(articles);
+  const homeCard = await buildHomeCard();
 
   for (const w of warnings) console.warn(`  warning: ${w}`);
 
@@ -665,6 +688,7 @@ async function main() {
   console.log(`  writing/feed.xml`);
   console.log(`  sitemap.xml (${articles.length + 3} urls)`);
   if (homeOk) console.log(`  index.html (Latest writing block)`);
+  console.log(`  assets/og-home.jpg (${Math.round(homeCard / 1024)}K)`);
 }
 
 await main();
