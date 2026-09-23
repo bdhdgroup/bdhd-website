@@ -6,7 +6,7 @@ topics: AI, government, geopolitics
 published_by:
 published_url:
 image: /writing/img/safeguards-yes-left-behind-no.jpg
-image_credit: Illustration for BDHD Group
+image_credit: Photo by Leon Macapagal, Pexels
 plate_seed: 3
 pullquote: "The safeguards exist. What's missing is anyone building them together."
 facts: |
