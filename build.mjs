@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { marked } from 'marked';
 import { load as yamlLoad } from 'js-yaml';
 import { Resvg } from '@resvg/resvg-js';
@@ -211,7 +212,21 @@ async function renderOg(svg, outPath) {
   const png = r.render().asPng();
   const jpg = await sharp(png).flatten({ background: PALETTE.ink })
     .jpeg({ quality: 84, mozjpeg: true, chromaSubsampling: '4:4:4' }).toBuffer();
-  writeFileSync(outPath, jpg);
+  if (outPath) writeFileSync(outPath, jpg);
+  return jpg;
+}
+
+/** Render an article's card as og-<hash>.jpg and clear out earlier ones. */
+async function buildArticleCard(a) {
+  const dir = join(OUT, a.slug);
+  mkdirSync(dir, { recursive: true });
+  const jpg = await renderOg(ogSvg(a.title, ogPlateInner(a)));
+  const name = `og-${shortHash(jpg)}.jpg`;
+  for (const f of readdirSync(dir)) {
+    if (/^og(-[0-9a-f]+)?\.(jpe?g|png)$/i.test(f) && f !== name) unlinkSync(join(dir, f));
+  }
+  writeFileSync(join(dir, name), jpg);
+  a.ogUrl = `${SITE}${a.path}${name}`;
   return jpg.length;
 }
 
@@ -221,7 +236,7 @@ async function buildHomeCard() {
   mkdirSync(dir, { recursive: true });
   const plate = plateSvg(2, 'home').replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
   const svg = ogSvg('BDHD Group', plate, { line1: 'Advisory | Investment | Governance', line2: 'bdhd.ae' });
-  return renderOg(svg, join(dir, 'og-home.jpg'));
+  return (await renderOg(svg, join(dir, 'og-home.jpg'))).length;
 }
 
 /* ---------- content ---------- */
@@ -364,12 +379,26 @@ function imageSource(a) {
   return join(CONTENT, 'img', base);
 }
 
-/** Derived output path, e.g. /writing/img/slug-440.webp */
+const shortHash = (buf) => createHash('sha1').update(buf).digest('hex').slice(0, 8);
+
+/**
+ * Content hash of the source photo, memoised per article. It goes into every
+ * derived filename so that replacing a photo changes its URL, which is the
+ * only reliable way to get browsers, the CDN and share crawlers (X caches a
+ * card image for about a week) to fetch the new one.
+ */
+function imageHash(a) {
+  if (!a.imageHash) a.imageHash = shortHash(readFileSync(imageSource(a)));
+  return a.imageHash;
+}
+
+/** Derived output path, e.g. /writing/img/slug-1af31219-440.jpg */
 function imageVariant(a, key, ext = 'jpg') {
   const base = a.image.split('/').pop().replace(/\.[^.]+$/, '');
+  const h = imageHash(a);
   return key === 'large'
-    ? `/writing/img/${base}.${ext}`
-    : `/writing/img/${base}-${IMG_WIDTHS[key]}.${ext}`;
+    ? `/writing/img/${base}-${h}.${ext}`
+    : `/writing/img/${base}-${h}-${IMG_WIDTHS[key]}.${ext}`;
 }
 
 /** True when front matter names a photo and its source is actually on disk. */
@@ -391,19 +420,28 @@ async function buildImages(articles) {
   const dir = join(OUT, 'img');
   mkdirSync(dir, { recursive: true });
   let written = 0, bytes = 0;
+  const keep = new Set();
   for (const a of articles) {
     if (!hasUsableImage(a)) continue;
     const src = imageSource(a);
     for (const key of Object.keys(IMG_WIDTHS)) {
+      const out = imageVariant(a, key).split('/').pop();
+      keep.add(out);
       const buf = await sharp(src).rotate()
         .resize({ width: IMG_WIDTHS[key], withoutEnlargement: true })
         .jpeg({ quality: IMG_QUALITY, mozjpeg: true })
         .toBuffer();
-      writeFileSync(join(ROOT, imageVariant(a, key).replace(/^\//, '')), buf);
+      writeFileSync(join(dir, out), buf);
       written++; bytes += buf.length;
     }
   }
-  return { written, bytes };
+  // Old hashes and anything hand-dropped in here are stale: the sources live
+  // in content/writing/img and this folder is entirely generated.
+  let removed = 0;
+  for (const f of readdirSync(dir)) {
+    if (/\.(jpe?g|png|webp)$/i.test(f) && !keep.has(f)) { unlinkSync(join(dir, f)); removed++; }
+  }
+  return { written, bytes, removed };
 }
 
 function plateFor(a, { lazy = true, priority = false, size = 'large', sizes = '' } = {}) {
@@ -483,7 +521,7 @@ function buildIndex(articles, css, tpl) {
     DESC: 'Essays and columns on the Gulf economy, government, and where policy meets private capital, by Phil Broadhead OBE.',
     OG_TITLE: 'Writing | BDHD Group',
     CANONICAL: `${SITE}/writing/`,
-    OG_IMAGE: `${SITE}/writing/${hero.slug}/og.jpg`,
+    OG_IMAGE: hero.ogUrl,
     OG_ALT: esc(hero.title),
     CSS: css,
     HEADER: header('writing'),
@@ -527,7 +565,7 @@ ${others.map((o) => `    <a href="${o.path}">${esc(o.title)}<small>${esc(monthYe
     datePublished: isoDate(a.date),
     author: { '@type': 'Person', name: AUTHOR, url: `${SITE}/phil-broadhead` },
     publisher: { '@type': 'Organization', name: 'BDHD Group', url: SITE },
-    image: `${SITE}${a.path}og.jpg`,
+    image: a.ogUrl,
     mainEntityOfPage: { '@type': 'WebPage', '@id': a.url },
     ...(a.topics ? { keywords: a.topics } : {}),
   }, null, 2);
@@ -541,7 +579,7 @@ ${others.map((o) => `    <a href="${o.path}">${esc(o.title)}<small>${esc(monthYe
     OG_TITLE: esc(a.title),
     CANONICAL: a.canonical,
     PAGE_URL: a.url,
-    OG_IMAGE: `${SITE}${a.path}og.jpg`,
+    OG_IMAGE: a.ogUrl,
     OG_ALT: esc(a.title),
     PUBLISHED_TIME: isoDate(a.date),
     JSONLD: jsonld,
@@ -664,13 +702,10 @@ async function main() {
   mkdirSync(OUT, { recursive: true });
   const img = await buildImages(articles);
 
+  let cardBytes = 0;
+  for (const a of articles) cardBytes += await buildArticleCard(a);
   for (const a of articles) {
-    const dir = join(OUT, a.slug);
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), buildArticle(a, articles, css, articleTpl));
-    const stale = join(dir, 'og.png');
-    if (existsSync(stale)) unlinkSync(stale);
-    await renderOg(ogSvg(a.title, ogPlateInner(a)), join(dir, 'og.jpg'));
+    writeFileSync(join(OUT, a.slug, 'index.html'), buildArticle(a, articles, css, articleTpl));
   }
 
   writeFileSync(join(OUT, 'index.html'), buildIndex(articles, css, indexTpl));
@@ -684,7 +719,8 @@ async function main() {
   console.log(`Built ${articles.length} articles`);
   console.log(`  writing/index.html`);
   for (const a of articles) console.log(`  writing/${a.slug}/ (${a.words} words, ${a.minutes} min)`);
-  console.log(`  writing/img/ (${img.written} files, ${Math.round(img.bytes / 1024)}K total)`);
+  console.log(`  writing/img/ (${img.written} files, ${Math.round(img.bytes / 1024)}K total${img.removed ? `, ${img.removed} stale removed` : ''})`);
+  console.log(`  og cards (${articles.length} files, ${Math.round(cardBytes / 1024)}K total)`);
   console.log(`  writing/feed.xml`);
   console.log(`  sitemap.xml (${articles.length + 3} urls)`);
   if (homeOk) console.log(`  index.html (Latest writing block)`);

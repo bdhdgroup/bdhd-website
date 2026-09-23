@@ -15,7 +15,7 @@ Three steps.
 
 The build regenerates the whole Writing section every time, so it is safe to run
 repeatedly. It writes `writing/index.html`, one folder per article, an Open Graph
-card (`og.jpg`, 1200x630) for each, `writing/feed.xml`, and refreshes `sitemap.xml`.
+card (`og-<hash>.jpg`, 1200x630) for each, `writing/feed.xml`, and refreshes `sitemap.xml`.
 
 ## Front matter template
 
@@ -56,9 +56,11 @@ Everything after the closing `---` is the body, in normal markdown.
 
 ## Header images
 
-Photos live in `writing/img/`, named after the slug, and are referenced from
-front matter as `/writing/img/<slug>.jpg`. The build never deletes that folder,
-so it is safe to drop files in there and rebuild.
+Put the photo in `content/writing/img/`, named after the slug, and reference it
+from front matter as `/writing/img/<slug>.jpg`. That path is the logical name;
+the build resizes the source into `writing/img/` under hashed filenames and
+writes every reference itself. `writing/img/` is entirely generated - do not
+put files there by hand, the next build removes anything it did not make.
 
 `image_credit` appears in small muted type directly under the image. It is only
 rendered when there is a real photo, never under a generated plate.
@@ -90,3 +92,12 @@ the "facts behind this piece" margin note links to it automatically.
 - **The plate**, the abstract illustration, generated from the slug or
   `plate_seed`. The same artwork is reused as the background of the Open Graph
   image.
+
+## Why the image filenames have a hash in them
+
+Generated images are named by a hash of their content, e.g.
+`safeguards-yes-left-behind-no-bc0a7a14-440.jpg` and `og-1af31219.jpg`. Replace
+a photo and rebuild, and every derived file gets a new name and therefore a new
+URL. That is what makes browsers, the CDN and share crawlers fetch the new image
+straight away instead of showing a cached copy for days. You never need to type
+these names: the build writes every reference.
