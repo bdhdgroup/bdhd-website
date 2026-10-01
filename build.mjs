@@ -279,6 +279,19 @@ function parseFlatFrontMatter(text) {
   return out;
 }
 
+/** Default placement of the pull quote, counted in body paragraphs. */
+const PULLQUOTE_AFTER_DEFAULT = 3;
+
+/** pullquote_after: optional positive integer; anything else falls back. */
+function parsePullquoteAfter(v, file) {
+  if (v === undefined || v === null || v === '') return PULLQUOTE_AFTER_DEFAULT;
+  const n = Number(v);
+  if (Number.isInteger(n) && n >= 1) return n;
+  warnings.push(`${file}: pullquote_after "${v}" is not a whole number of 1 or more. `
+    + `Using the default of ${PULLQUOTE_AFTER_DEFAULT}.`);
+  return PULLQUOTE_AFTER_DEFAULT;
+}
+
 function readArticles() {
   const files = readdirSync(CONTENT).filter((f) => f.endsWith('.md') && f !== 'README.md');
   const out = [];
@@ -334,6 +347,7 @@ function readArticles() {
       plateSeed: fm.plate_seed === undefined || fm.plate_seed === null || fm.plate_seed === ''
         ? null : Number(fm.plate_seed),
       pullquote: (fm.pullquote || '').toString().trim(),
+      pullquoteAfter: parsePullquoteAfter(fm.pullquote_after, file),
       facts: (fm.facts || '').toString().trim(),
       url: `${SITE}/writing/${slug}/`,
       path: `/writing/${slug}/`,
@@ -354,13 +368,15 @@ function renderBody(a) {
     html += marked.parser([t]);
     if (t.type === 'paragraph') {
       paras++;
-      if (paras === 3 && a.pullquote && !inserted) {
+      if (paras === a.pullquoteAfter && a.pullquote && !inserted) {
         html += `<blockquote><p>${esc(a.pullquote)}</p></blockquote>\n`;
         inserted = true;
       }
     }
   }
   if (a.pullquote && !inserted) {
+    warnings.push(`${a.file}: pullquote_after is ${a.pullquoteAfter} but the body has only `
+      + `${paras} paragraphs. The pull quote has been placed at the end.`);
     html += `<blockquote><p>${esc(a.pullquote)}</p></blockquote>\n`;
   }
   return html.replace(/<h2>Sources<\/h2>/i, '<h2 id="sources">Sources</h2>');
@@ -538,6 +554,17 @@ function buildIndex(articles, css, tpl) {
   });
 }
 
+/**
+ * The margin note. Written as one paragraph it renders as one; written as
+ * several lines (a list of figures, say) each line keeps its own row rather
+ * than collapsing into a run-on block.
+ */
+function factsHtml(facts) {
+  const lines = facts.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return esc(facts);
+  return lines.map((l) => `<span class="fact">${esc(l)}</span>`).join('');
+}
+
 function buildArticle(a, all, css, tpl) {
   const others = all.filter((x) => x.slug !== a.slug).slice(0, 2);
   const more = others.length ? `  <div class="more">
@@ -548,7 +575,7 @@ ${others.map((o) => `    <a href="${o.path}">${esc(o.title)}<small>${esc(monthYe
   const hasSources = /<h2 id="sources">/.test(a.renderedBody);
   const aside = a.facts ? `  <aside class="aside" aria-label="The facts behind this piece">
     <b>The facts behind this piece</b>
-    ${esc(a.facts)}${hasSources ? ' <a href="#sources">Sources</a>' : ''}
+    ${factsHtml(a.facts)}${hasSources ? ' <a href="#sources">Sources</a>' : ''}
   </aside>` : '';
 
   const firstPub = a.publishedBy

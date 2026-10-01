@@ -33,7 +33,8 @@ published_url:           # link to the original, if published_by is set
 image:                   # path to a real photo, e.g. /writing/img/my-piece.jpg. Leave blank to generate a plate.
 image_credit:            # shown small under the header image, e.g. Photo by Tom Fisk, Pexels
 plate_seed:              # optional integer. Change it if you dislike the generated plate.
-pullquote: A single sentence lifted from the piece. Appears as a large quote after the third paragraph.
+pullquote: A single sentence lifted from the piece. Appears as a large quote.
+pullquote_after:         # optional: which body paragraph the quote follows (headings not counted). Default 3.
 facts: |
   Optional margin note, shown as "The facts behind this piece". Plain text.
   Indent continuation lines by two spaces.
