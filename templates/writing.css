@@ -131,6 +131,8 @@ img{max-width:100%;display:block}
 .author{display:grid;grid-template-columns:72px 1fr;gap:20px;background:var(--lav);padding:26px;border-radius:6px;margin-top:36px}
 .author .ava{width:72px;height:72px}
 .author p{margin:6px 0 0;color:var(--ink-2);font-size:16px;line-height:1.55}
+.author .author-invite{margin-top:10px}
+.author .author-invite a{color:var(--link);border-bottom:1px solid currentColor;font-weight:500}
 .more{margin-top:44px}
 .more h2{font-family:var(--serif);font-weight:500;font-size:22px;margin:0 0 14px}
 .more a{display:block;padding:14px 0;border-top:1px solid var(--hair);font-family:var(--serif);font-size:20px}

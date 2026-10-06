@@ -256,6 +256,29 @@
             height: 16px;
         }
 
+        .footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer__links {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer__links a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .footer__links a:hover {
+            border-bottom-color: var(--primary);
+        }
+
         /* ── Responsive ── */
 
         @media (max-width: 800px) {
@@ -348,7 +371,7 @@
     <!-- Site nav -->
     <header class="top">
         <a class="mark" href="/"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>BDHD</b><span>GROUP</span></a>
-        <nav aria-label="Primary"><a href="/#about">About</a><a href="/phil-broadhead" class="here">Phil Broadhead OBE</a><a href="/writing/">Writing</a><a href="/#contact">Contact</a></nav>
+        <nav aria-label="Primary"><a href="/#about">About</a><a href="/phil-broadhead" class="here">Phil Broadhead OBE</a><a href="/writing/">Writing</a><a href="/speaking/">Speaking</a><a href="/#contact">Contact</a></nav>
     </header>
 
     <!-- Bio -->
@@ -406,6 +429,7 @@
     <!-- Footer -->
     <footer class="footer">
         <p class="footer__text"><img src="bdhd_four_squares.png" class="footer__mark" alt="">BDHD Group. Dubai, UAE. &copy; 2026</p>
+        <p class="footer__links"><a href="/writing/">Writing</a> <span aria-hidden="true">&middot;</span> <a href="/speaking/#invite">Invite Phil to speak</a></p>
     </footer>
 
 </body>

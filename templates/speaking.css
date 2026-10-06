@@ -1,0 +1,105 @@
+/* ---------- Speaking page (layered on writing.css) ---------- */
+
+/* Hero. Photos sit at 30% over ink, with a scrim that is darkest behind the
+   text, so the headline and kicker clear WCAG AA even over a pure white
+   pixel at any point in the cycle. */
+.sp-hero{position:relative;background:var(--ink);color:#fff;overflow:hidden;isolation:isolate}
+.sp-bg{position:absolute;inset:0;z-index:-2}
+.sp-item{position:absolute;inset:0;opacity:0;transition:opacity 1.5s ease}
+.sp-item.on{opacity:.3}
+.sp-item img,.sp-item video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+@media (min-width:901px) and (prefers-reduced-motion:no-preference){
+  .sp-item.on img,.sp-item.on video,.sp-item.out img,.sp-item.out video{animation:sp-push 9s linear forwards}
+}
+@keyframes sp-push{from{transform:scale(1)}to{transform:scale(1.06)}}
+.sp-bg.paused *{animation-play-state:paused}
+.sp-scrim{position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(26,26,46,.62) 0%,rgba(26,26,46,.45) 45%,rgba(26,26,46,.1) 100%)}
+.sp-hero .in{max-width:1280px;margin:0 auto;padding:104px 6vw 112px}
+.sp-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(38px,4.8vw,64px);line-height:1.06;letter-spacing:-.01em;margin:0 0 24px;max-width:17ch;text-wrap:balance}
+.sp-sub{font-size:20px;line-height:1.5;color:#D6DAF0;max-width:54ch;margin:0}
+.sp-ctas{display:flex;flex-wrap:wrap;gap:14px;margin-top:34px}
+.sp-ctas .cta{margin-top:0}
+.cta-quiet{border-color:rgba(255,255,255,.35)}
+
+/* Shared section rhythm */
+.sp-wrap{max-width:1280px;margin:0 auto;padding:0 6vw}
+.sp-section{padding:80px 0}
+.sp-tint{background:var(--lav)}
+.sp-section h2{font-family:var(--serif);font-weight:500;font-size:34px;line-height:1.2;margin:0 0 10px}
+.sp-sec-intro{color:var(--ink-2);font-size:18px;margin:0 0 36px;max-width:62ch}
+
+/* Introduction and proof strip */
+.sp-intro{padding:80px 0 72px}
+.sp-lead{max-width:68ch}
+.sp-lead p{font-size:20px;line-height:1.65;color:var(--ink-2);margin:0 0 1.1em}
+.sp-lead p:first-child{font-family:var(--serif);font-size:24px;line-height:1.5;color:var(--ink)}
+.sp-proof{list-style:none;margin:44px 0 0;padding:28px 0 0;border-top:1px solid var(--hair);display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.sp-proof li{font-family:var(--serif);font-size:21px;line-height:1.3;color:var(--ink);padding-left:16px;border-left:3px solid var(--b1)}
+
+/* Topics */
+.sp-topics{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.sp-topic{border:1px solid var(--hair);border-top:3px solid var(--b1);border-radius:4px;padding:26px 24px 28px;background:#fff}
+.sp-topic:nth-child(2){border-top-color:var(--b2)}.sp-topic:nth-child(3){border-top-color:var(--b3)}
+.sp-topic:nth-child(4){border-top-color:var(--b2)}.sp-topic:nth-child(5){border-top-color:var(--b3)}.sp-topic:nth-child(6){border-top-color:var(--b4)}
+.sp-topic h3{font-family:var(--serif);font-weight:500;font-size:22px;line-height:1.25;margin:0 0 10px}
+.sp-topic p{margin:0;color:var(--ink-2);font-size:17px;line-height:1.55}
+
+/* Formats */
+.sp-formats{display:grid;grid-template-columns:1fr 1fr;gap:0 56px;margin:28px 0 0}
+.sp-formats div{padding:18px 0;border-top:1px solid var(--hair)}
+.sp-formats dt{font-weight:600;font-size:18px;margin:0 0 4px}
+.sp-formats dd{margin:0;color:var(--ink-2);font-size:17px}
+
+/* On stage grid */
+.sp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px 24px}
+.sp-grid figure{margin:0}
+.sp-grid img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:4px;background:var(--lav)}
+.sp-grid figcaption{margin-top:10px;font-size:15px;color:var(--ink-2)}
+.sp-grid figcaption small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
+
+/* On air */
+.sp-onair{font-family:var(--serif);font-size:24px;line-height:1.45;max-width:46ch;margin:16px 0 0}
+.sp-film{margin-top:36px;max-width:900px}
+.sp-film video{width:100%;height:auto;border-radius:6px;background:var(--ink);display:block}
+
+/* Invite */
+.sp-invite{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:56px;align-items:start}
+.sp-form{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.sp-form .full{grid-column:1/-1}
+.sp-form label{display:block;font-size:15px;font-weight:600;margin:0 0 6px}
+.sp-form label span{font-weight:400;color:var(--mute)}
+.sp-form input,.sp-form select,.sp-form textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:#fff;border:1px solid #B9BED3;border-radius:4px;padding:11px 12px}
+.sp-form textarea{min-height:120px;resize:vertical}
+.sp-form input:focus-visible,.sp-form select:focus-visible,.sp-form textarea:focus-visible{outline:2px solid var(--b1);outline-offset:1px;border-color:var(--b1)}
+.sp-form button{justify-self:start;font:inherit;font-weight:600;font-size:17px;color:#fff;background:var(--ink);border:0;border-radius:4px;padding:13px 24px;cursor:pointer}
+.sp-form button:hover{background:var(--link)}
+.sp-note{grid-column:1/-1;margin:2px 0 0;font-size:15px;color:var(--mute)}
+.sp-note a{color:var(--link);border-bottom:1px solid currentColor}
+.sp-kit{background:var(--lav);border-radius:6px;padding:28px}
+.sp-kit h3{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 14px}
+.sp-kit ul{list-style:none;margin:0 0 18px;padding:0}
+.sp-kit li{padding:11px 0;border-top:1px solid var(--hair)}
+.sp-kit li a{color:var(--link);border-bottom:1px solid currentColor}
+.sp-kit li small{display:block;color:var(--mute);font-size:14px;margin-top:2px}
+.sp-kit-all{display:inline-block;font-weight:600;color:var(--ink);border-bottom:2px solid var(--b1);padding-bottom:2px}
+
+@media (max-width:1100px){
+  .sp-topics{grid-template-columns:repeat(2,1fr)}
+  .sp-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:900px){
+  /* One still on phones: a flat scrim so text clears AA across the full width. */
+  .sp-scrim{background:rgba(26,26,46,.5)}
+  .sp-hero .in{padding:64px 6vw 72px}
+  .sp-proof{grid-template-columns:1fr 1fr}
+  .sp-formats{grid-template-columns:1fr}
+  .sp-invite{grid-template-columns:1fr}
+  .sp-section{padding:60px 0}
+  .sp-intro{padding:56px 0}
+}
+@media (max-width:640px){
+  .sp-topics,.sp-grid{grid-template-columns:1fr}
+  .sp-form{grid-template-columns:1fr}
+  .sp-lead p:first-child{font-size:21px}
+}

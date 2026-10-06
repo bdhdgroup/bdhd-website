@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, unlink
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { crc32 } from 'node:zlib';
 import { marked } from 'marked';
 import { load as yamlLoad } from 'js-yaml';
 import { Resvg } from '@resvg/resvg-js';
@@ -500,10 +501,10 @@ function artFigure(a) {
 
 const header = (here) => `<header class="top">
   <a class="mark" href="/"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>BDHD</b><span>GROUP</span></a>
-  <nav aria-label="Primary"><a href="/#about"${here === 'about' ? ' class="here"' : ''}>About</a><a href="/phil-broadhead"${here === 'phil' ? ' class="here"' : ''}>Phil Broadhead OBE</a><a href="/writing/"${here === 'writing' ? ' class="here"' : ''}>Writing</a><a href="/#contact"${here === 'contact' ? ' class="here"' : ''}>Contact</a></nav>
+  <nav aria-label="Primary"><a href="/#about"${here === 'about' ? ' class="here"' : ''}>About</a><a href="/phil-broadhead"${here === 'phil' ? ' class="here"' : ''}>Phil Broadhead OBE</a><a href="/writing/"${here === 'writing' ? ' class="here"' : ''}>Writing</a><a href="/speaking/"${here === 'speaking' ? ' class="here"' : ''}>Speaking</a><a href="/#contact"${here === 'contact' ? ' class="here"' : ''}>Contact</a></nav>
 </header>`;
 
-const footer = () => `<footer class="site-foot"><span>BDHD Group. Dubai, UAE. &copy; ${new Date().getUTCFullYear()}</span><span><a href="mailto:phil@bdhd.ae">phil@bdhd.ae</a></span></footer>`;
+const footer = () => `<footer class="site-foot"><span>BDHD Group. Dubai, UAE. &copy; ${new Date().getUTCFullYear()}</span><span><a href="/speaking/#invite">Invite Phil to speak</a> &middot; <a href="mailto:phil@bdhd.ae">phil@bdhd.ae</a></span></footer>`;
 
 /* ---------- pages ---------- */
 
@@ -693,6 +694,7 @@ function buildSitemap(articles) {
     { loc: `${SITE}/`, lastmod: latest, priority: '1.0' },
     { loc: `${SITE}/phil-broadhead`, lastmod: '2026-08-06', priority: '0.8' },
     { loc: `${SITE}/writing/`, lastmod: latest, priority: '0.8' },
+    { loc: `${SITE}/speaking/`, lastmod: '2026-10-06', priority: '0.8' },
     ...articles.map((a) => ({ loc: a.url, lastmod: isoDate(a.date), priority: '0.7' })),
   ];
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -707,6 +709,301 @@ ${urls.map((u) => `  <url>
 }
 
 /* ---------- main ---------- */
+
+/* ---------- speaking ---------- */
+
+const SPEAK_SRC = join(ROOT, 'content', 'speaking');
+const SPEAK_OUT = join(ROOT, 'speaking');
+const SPEAK_BG = { large: 1920, small: 960, quality: 68 };
+const SPEAK_GRID = { widths: [640, 1000], quality: 76 };
+const KIT_ZIP_NAME = 'Phil-Broadhead-OBE-speaker-kit.zip';
+
+/** Read a markdown file's front matter strictly as YAML. */
+function readYamlFrontMatter(path) {
+  const raw = readFileSync(path, 'utf8');
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!m) throw new Error(`${path}: no front matter block`);
+  return yamlLoad(m[1]) || {};
+}
+
+/** Duration of an MP4 from its mvhd box, in ms. Avoids needing ffprobe. */
+function mp4DurationMs(buf) {
+  const i = buf.indexOf('mvhd');
+  if (i < 0) return null;
+  const v1 = buf[i + 4] === 1;
+  const ts = buf.readUInt32BE(i + (v1 ? 24 : 16));
+  const dur = v1 ? Number(buf.readBigUInt64BE(i + 28)) : buf.readUInt32BE(i + 20);
+  return ts ? Math.round((dur / ts) * 1000) : null;
+}
+
+/**
+ * Minimal store-only zip. Photos and PDFs barely compress, and a fixed
+ * timestamp keeps the archive byte-identical between builds.
+ */
+function zipStore(files) {
+  const DOS_DATE = ((2026 - 1980) << 9) | (1 << 5) | 1;
+  const parts = [], central = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = Buffer.from(f.name, 'utf8');
+    const crc = crc32(f.data) >>> 0, size = f.data.length;
+    const lh = Buffer.alloc(30);
+    lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(0x0800, 6);
+    lh.writeUInt16LE(0, 8); lh.writeUInt16LE(0, 10); lh.writeUInt16LE(DOS_DATE, 12);
+    lh.writeUInt32LE(crc, 14); lh.writeUInt32LE(size, 18); lh.writeUInt32LE(size, 22);
+    lh.writeUInt16LE(name.length, 26); lh.writeUInt16LE(0, 28);
+    parts.push(lh, name, f.data);
+    const ch = Buffer.alloc(46);
+    ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(20, 4); ch.writeUInt16LE(20, 6);
+    ch.writeUInt16LE(0x0800, 8); ch.writeUInt16LE(0, 10); ch.writeUInt16LE(0, 12);
+    ch.writeUInt16LE(DOS_DATE, 14); ch.writeUInt32LE(crc, 16); ch.writeUInt32LE(size, 20);
+    ch.writeUInt32LE(size, 24); ch.writeUInt16LE(name.length, 28);
+    ch.writeUInt32LE(offset, 42);
+    central.push(ch, name);
+    offset += 30 + name.length + size;
+  }
+  const cd = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...parts, cd, end]);
+}
+
+/**
+ * Crop a photo to an aspect ratio around its most salient region, write it
+ * as WebP at each width under a content-hashed name, and return the URLs
+ * plus a focal point (as CSS object-position) for narrower viewports.
+ */
+async function speakingImage(src, { ratio, widths, quality }, keep) {
+  const buf = readFileSync(src);
+  const meta = await sharp(buf).rotate().metadata();
+  const W = meta.width, H = meta.height;
+  let cw = W, ch = Math.round(W / ratio);
+  if (ch > H) { ch = H; cw = Math.round(H * ratio); }
+  const cropped = await sharp(buf).rotate()
+    .resize({ width: cw, height: ch, fit: 'cover', position: sharp.strategy.attention })
+    .toBuffer();
+  // Second attention pass, square, to find where the subject sits in the crop.
+  const sq = Math.min(cw, ch);
+  const { info } = await sharp(cropped)
+    .resize({ width: sq, height: sq, fit: 'cover', position: sharp.strategy.attention })
+    .toBuffer({ resolveWithObject: true });
+  const fx = cw > sq ? Math.round(((-(info.cropOffsetLeft || 0) + sq / 2) / cw) * 100) : 50;
+  const fy = ch > sq ? Math.round(((-(info.cropOffsetTop || 0) + sq / 2) / ch) * 100) : 50;
+  const base = src.split('/').pop().replace(/\.[^.]+$/, '');
+  const h = shortHash(Buffer.concat([buf, Buffer.from(`${ratio}|${widths}|${quality}`)]));
+  const out = {};
+  for (const w of widths) {
+    const name = `${base}-${h}-${w}.webp`;
+    keep.add(name);
+    const file = join(SPEAK_OUT, 'media', name);
+    if (!existsSync(file)) {
+      writeFileSync(file, await sharp(cropped).resize({ width: w, withoutEnlargement: true })
+        .webp({ quality, effort: 5 }).toBuffer());
+    }
+    out[w] = `/speaking/media/${name}`;
+  }
+  return { urls: out, focus: `${Math.min(100, Math.max(0, fx))}% ${Math.min(100, Math.max(0, fy))}%` };
+}
+
+async function buildSpeaking(baseCss) {
+  if (!existsSync(join(SPEAK_SRC, 'index.md'))) return null;
+  const page = readYamlFrontMatter(join(SPEAK_SRC, 'index.md'));
+  const media = (f) => join(SPEAK_SRC, 'media', f);
+  for (const d of ['media', 'kit']) mkdirSync(join(SPEAK_OUT, d), { recursive: true });
+  const keep = new Set();
+
+  // Hero montage
+  const bg = [];
+  for (const [n, f] of (page.background || []).entries()) {
+    if (!existsSync(media(f))) { warnings.push(`speaking: background "${f}" not found in content/speaking/media/`); continue; }
+    if (/\.(mp4|webm)$/i.test(f)) {
+      const buf = readFileSync(media(f));
+      const name = `${f.replace(/\.[^.]+$/, '')}-${shortHash(buf)}${f.match(/\.[^.]+$/)[0]}`;
+      keep.add(name);
+      writeFileSync(join(SPEAK_OUT, 'media', name), buf);
+      if (buf.length > 1.5 * 1024 * 1024) warnings.push(`speaking: clip "${f}" is over 1.5MB`);
+      bg.push({ type: 'video', src: `/speaking/media/${name}`, dur: mp4DurationMs(buf) || 4000 });
+    } else {
+      const img = await speakingImage(media(f), { ratio: 16 / 9, widths: [SPEAK_BG.small, SPEAK_BG.large], quality: SPEAK_BG.quality }, keep);
+      bg.push({ type: 'img', ...img });
+    }
+    if (n === 0 && bg[0] && bg[0].type !== 'img') errors.push('speaking: the first background item must be a photo (it is the still shown on phones)');
+  }
+  const first = bg[0];
+  // The automatic focal point follows the brightest detail, which on a stage
+  // photo can be the lectern rather than the speaker. hero_focus overrides it
+  // for the still that phones see.
+  if (first && page.hero_focus) first.focus = page.hero_focus.toString();
+  const bgItems = bg.map((b, i) => {
+    if (i === 0) {
+      return `    <div class="sp-item on" data-loaded="1"><img src="${first.urls[SPEAK_BG.large]}" `
+        + `srcset="${first.urls[SPEAK_BG.small]} ${SPEAK_BG.small}w, ${first.urls[SPEAK_BG.large]} ${SPEAK_BG.large}w" sizes="100vw" `
+        + `alt="" fetchpriority="high" decoding="async" style="object-position:${first.focus}"></div>`;
+    }
+    return b.type === 'video'
+      ? `    <div class="sp-item" data-type="video" data-src="${b.src}" data-dur="${b.dur}"></div>`
+      : `    <div class="sp-item" data-type="img" data-src="${b.urls[SPEAK_BG.large]}"></div>`;
+  }).join('\n');
+
+  // On stage grid
+  const stagesDir = join(SPEAK_SRC, 'stages');
+  const stages = existsSync(stagesDir) ? readdirSync(stagesDir).filter((f) => f.endsWith('.md'))
+    .map((f) => ({ file: f, ...readYamlFrontMatter(join(stagesDir, f)) }))
+    .sort((a, b) => (Number(a.order) || 999) - (Number(b.order) || 999) || a.file.localeCompare(b.file)) : [];
+  const stageHtml = [];
+  for (const s of stages) {
+    if (!s.photo || !existsSync(media(s.photo))) { warnings.push(`speaking: stages/${s.file} photo "${s.photo}" not found`); continue; }
+    const img = await speakingImage(media(s.photo), { ratio: 4 / 3, widths: SPEAK_GRID.widths, quality: SPEAK_GRID.quality }, keep);
+    const [w1, w2] = SPEAK_GRID.widths;
+    const cap = (s.caption || '').toString().trim();
+    const credit = (s.credit || '').toString().trim();
+    const alt = (s.alt || `Phil Broadhead OBE${cap ? `, ${cap.toLowerCase()}` : ''}`).toString();
+    stageHtml.push(`      <figure><img src="${img.urls[w1]}" srcset="${img.urls[w1]} ${w1}w, ${img.urls[w2]} ${w2}w" `
+      + `sizes="(max-width: 640px) 92vw, (max-width: 1100px) 45vw, 400px" width="${w2}" height="${Math.round(w2 * 3 / 4)}" `
+      + `alt="${escAttr(alt)}" loading="lazy" decoding="async" style="object-position:${img.focus}">`
+      + `${cap || credit ? `<figcaption>${esc(cap)}${credit ? `<small>Photo: ${esc(credit)}</small>` : ''}</figcaption>` : ''}</figure>`);
+  }
+
+  // Featured film (optional)
+  let featured = '';
+  if (page.featured_video && existsSync(media(page.featured_video))) {
+    const buf = readFileSync(media(page.featured_video));
+    const name = `${page.featured_video.replace(/\.[^.]+$/, '')}-${shortHash(buf)}.mp4`;
+    keep.add(name); writeFileSync(join(SPEAK_OUT, 'media', name), buf);
+    let poster = '';
+    if (page.featured_poster && existsSync(media(page.featured_poster))) {
+      const p = await speakingImage(media(page.featured_poster), { ratio: 16 / 9, widths: [1280], quality: 76 }, keep);
+      poster = ` poster="${p.urls[1280]}"`;
+    }
+    featured = `    <div class="sp-film"><video controls preload="none" playsinline${poster} src="/speaking/media/${name}"></video></div>`;
+  }
+
+  // Stale media from earlier builds
+  for (const f of readdirSync(join(SPEAK_OUT, 'media'))) if (!keep.has(f)) unlinkSync(join(SPEAK_OUT, 'media', f));
+
+  // Speaker kit
+  const kitSrc = join(SPEAK_SRC, 'kit');
+  const kitFiles = [];
+  const kitItems = [];
+  const addKit = (name, data, label, note) => {
+    kitFiles.push({ name, data });
+    writeFileSync(join(SPEAK_OUT, 'kit', name), data);
+    kitItems.push(`        <li><a href="/speaking/kit/${name}" download>${esc(label)}</a>${note ? `<small>${esc(note)}</small>` : ''}</li>`);
+  };
+  const words = (t) => t.split(/\s+/).filter(Boolean).length;
+  if (page.short_bio) addKit('Phil-Broadhead-OBE-short-bio.txt', Buffer.from(`${page.short_bio.trim()}\n`), 'Short bio', `${words(page.short_bio)} words, plain text`);
+  if (page.long_bio) addKit('Phil-Broadhead-OBE-long-bio.txt', Buffer.from(`${page.long_bio.trim()}\n`), 'Long bio', `${words(page.long_bio)} words, plain text`);
+  for (const hs of page.kit_headshots || []) {
+    const p = join(kitSrc, hs.file);
+    if (!existsSync(p)) { warnings.push(`speaking: headshot "${hs.file}" not found in content/speaking/kit/`); continue; }
+    const m = await sharp(p).metadata();
+    addKit(`Phil-Broadhead-OBE-${hs.file}`, readFileSync(p), hs.label || 'Headshot', `JPEG, ${m.width} x ${m.height}`);
+  }
+  if (existsSync(join(kitSrc, 'speaker-sheet.pdf'))) {
+    addKit('Phil-Broadhead-OBE-speaker-sheet.pdf', readFileSync(join(kitSrc, 'speaker-sheet.pdf')), 'Speaker sheet', 'One page, PDF');
+  } else {
+    warnings.push('speaking: no speaker-sheet.pdf in content/speaking/kit/ yet (run npm run speaker-sheet)');
+  }
+  const zip = zipStore(kitFiles);
+  writeFileSync(join(SPEAK_OUT, 'kit', KIT_ZIP_NAME), zip);
+  const kitKeep = new Set([...kitFiles.map((f) => f.name), KIT_ZIP_NAME]);
+  for (const f of readdirSync(join(SPEAK_OUT, 'kit'))) if (!kitKeep.has(f)) unlinkSync(join(SPEAK_OUT, 'kit', f));
+
+  // Enquiry form
+  const email = (page.invite_email || 'phil@bdhd.ae').toString();
+  const endpoint = (page.form_endpoint || '').toString().trim();
+  const formats = ['Keynote', 'Panel', 'Chair or moderator', 'Fireside conversation', 'Roundtable or private briefing', 'Media'];
+  const field = (name, label, { type = 'text', required = false, full = false, auto = '' } = {}) =>
+    `        <div${full ? ' class="full"' : ''}><label for="f-${name}">${esc(label)}${required ? '' : ' <span>(optional)</span>'}</label>`
+    + (type === 'textarea'
+      ? `<textarea id="f-${name}" name="${name}"${required ? ' required' : ''}></textarea>`
+      : `<input id="f-${name}" name="${name}" type="${type}"${auto ? ` autocomplete="${auto}"` : ''}${required ? ' required' : ''}>`)
+    + `</div>`;
+  const form = `      <form id="enquiry" class="sp-form" ${endpoint
+    ? `action="${escAttr(endpoint)}" method="post" data-endpoint="1"`
+    : `action="mailto:${escAttr(email)}" method="post" enctype="text/plain"`} data-email="${escAttr(email)}">
+${endpoint ? '        <input type="hidden" name="_subject" value="Speaking enquiry from bdhd.ae">\n' : ''}${field('name', 'Name', { required: true, auto: 'name' })}
+${field('email', 'Email', { type: 'email', required: true, auto: 'email' })}
+${field('organisation', 'Organisation', { auto: 'organization' })}
+${field('event', 'Event name', { required: true })}
+${field('dates', 'Date(s)')}
+${field('city', 'City')}
+${field('audience', 'Audience (size and who)', { full: true })}
+        <div class="full"><label for="f-format">Format <span>(optional)</span></label><select id="f-format" name="format"><option value="">Choose one</option>${formats.map((f) => `<option>${esc(f)}</option>`).join('')}</select></div>
+${field('topic', 'Topic or session idea', { full: true })}
+${field('message', 'Anything else', { type: 'textarea', full: true })}
+        <button type="submit">Send enquiry</button>
+        <p class="sp-note" id="enquiry-note" aria-live="polite">${endpoint
+    ? `Or email <a href="mailto:${escAttr(email)}">${esc(email)}</a>.`
+    : `This opens an email to ${esc(email)} with your details filled in. Or email <a href="mailto:${escAttr(email)}">${esc(email)}</a> directly.`}</p>
+      </form>`;
+
+  // Share card
+  let ogUrl = `${SITE}/assets/og-home.jpg`;
+  if (page.og_photo && existsSync(media(page.og_photo))) {
+    const b64 = readFileSync(media(page.og_photo)).toString('base64');
+    const inner = `<image href="data:image/jpeg;base64,${b64}" x="0" y="0" width="400" height="400" preserveAspectRatio="xMidYMid slice"/>`;
+    const jpg = await renderOg(ogSvg(page.headline || 'Speaking', inner, { line1: AUTHOR, line2: 'bdhd.ae/speaking' }));
+    const name = `og-${shortHash(jpg)}.jpg`;
+    for (const f of readdirSync(SPEAK_OUT)) if (/^og-[0-9a-f]+\.jpg$/.test(f) && f !== name) unlinkSync(join(SPEAK_OUT, f));
+    writeFileSync(join(SPEAK_OUT, name), jpg);
+    ogUrl = `${SITE}/speaking/${name}`;
+  }
+
+  const jsonld = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Phil Broadhead',
+    honorificSuffix: 'OBE',
+    url: `${SITE}/speaking/`,
+    image: `${SITE}/phil-broadhead.jpg`,
+    jobTitle: 'Speaker, chair and moderator',
+    worksFor: { '@type': 'Organization', name: 'BDHD Group', url: SITE },
+    knowsAbout: (page.topics || []).map((t) => t.title),
+    sameAs: ['https://linkedin.com/in/pbroadhead', 'https://x.com/PhilBroadhead', `${SITE}/phil-broadhead`],
+  }, null, 2);
+
+  const paras = (t) => (t || '').toString().trim().split(/\n\s*\n/).map((p) => `      <p>${esc(p.replace(/\s+/g, ' '))}</p>`).join('\n');
+  const css = baseCss + '\n' + readFileSync(join(TEMPLATES, 'speaking.css'), 'utf8');
+  const html = fill(readFileSync(join(TEMPLATES, 'speaking.html'), 'utf8'), {
+    TITLE: esc(page.title || 'Speaking - Phil Broadhead OBE'),
+    DESC: esc(page.description || page.subhead || ''),
+    CANONICAL: `${SITE}/speaking/`,
+    OG_TITLE: esc(page.title || 'Speaking - Phil Broadhead OBE'),
+    OG_IMAGE: ogUrl,
+    OG_ALT: esc(page.headline || ''),
+    JSONLD: jsonld,
+    CSS: css,
+    HEADER: header('speaking'),
+    FOOTER: footer(),
+    HERO_PRELOAD: first ? first.urls[SPEAK_BG.large] : '',
+    HERO_SRCSET: first ? `${first.urls[SPEAK_BG.small]} ${SPEAK_BG.small}w, ${first.urls[SPEAK_BG.large]} ${SPEAK_BG.large}w` : '',
+    BG_ITEMS: bgItems,
+    EYEBROW: esc(page.eyebrow || 'Speaking'),
+    HEADLINE: esc(page.headline || ''),
+    SUBHEAD: esc(page.subhead || ''),
+    KIT_ZIP: `/speaking/kit/${KIT_ZIP_NAME}`,
+    INTRO: paras(page.intro),
+    PROOF: (page.proof || []).map((p) => `      <li>${esc(p)}</li>`).join('\n'),
+    TOPICS_INTRO: esc(page.topics_intro || ''),
+    TOPICS: (page.topics || []).map((t) => `      <article class="sp-topic"><h3>${esc(t.title)}</h3><p>${esc(t.text)}</p></article>`).join('\n'),
+    FORMATS: (page.formats || []).map((f) => `      <div><dt>${esc(f.title)}</dt><dd>${esc(f.text)}</dd></div>`).join('\n'),
+    STAGE_INTRO: esc(page.stage_intro || ''),
+    STAGES: stageHtml.join('\n'),
+    ON_AIR: esc(page.on_air || ''),
+    FEATURED: featured,
+    INVITE_INTRO: esc(page.invite_intro || ''),
+    FORM: form,
+    KIT_ITEMS: kitItems.join('\n'),
+  });
+  writeFileSync(join(SPEAK_OUT, 'index.html'), html);
+
+  for (const t of ['—', '–']) {
+    if (html.includes(t)) warnings.push('speaking: an em or en dash appears on the page');
+  }
+  return { bg: bg.length, stages: stageHtml.length, kit: kitFiles.length, updated: page.updated };
+}
 
 async function main() {
   const css = readFileSync(join(TEMPLATES, 'writing.css'), 'utf8');
@@ -740,6 +1037,7 @@ async function main() {
   writeFileSync(join(ROOT, 'sitemap.xml'), buildSitemap(articles));
   const homeOk = buildHomepageBlock(articles);
   const homeCard = await buildHomeCard();
+  const speaking = await buildSpeaking(css);
 
   for (const w of warnings) console.warn(`  warning: ${w}`);
 
@@ -749,9 +1047,10 @@ async function main() {
   console.log(`  writing/img/ (${img.written} files, ${Math.round(img.bytes / 1024)}K total${img.removed ? `, ${img.removed} stale removed` : ''})`);
   console.log(`  og cards (${articles.length} files, ${Math.round(cardBytes / 1024)}K total)`);
   console.log(`  writing/feed.xml`);
-  console.log(`  sitemap.xml (${articles.length + 3} urls)`);
+  console.log(`  sitemap.xml (${articles.length + 4} urls)`);
   if (homeOk) console.log(`  index.html (Latest writing block)`);
   console.log(`  assets/og-home.jpg (${Math.round(homeCard / 1024)}K)`);
+  if (speaking) console.log(`  speaking/ (${speaking.bg} background items, ${speaking.stages} stage photos, ${speaking.kit} kit files)`);
 }
 
 await main();

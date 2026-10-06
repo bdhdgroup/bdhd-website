@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Static site for bdhd.ae",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "speaker-sheet": "node scripts/speaker-sheet.mjs"
   },
   "repository": {
     "type": "git",
